@@ -148,13 +148,14 @@ export class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-        // Improved Touch Controls
         this.setupMobileControls();
 
         this.scoreText = this.add.text(16, 16, 'Banany: 0', { fontSize: '32px', fill: '#fff' });
         this.livesText = this.add.text(16, 50, 'Życia: 4', { fontSize: '32px', fill: '#fff' });
         this.levelText = this.add.text(16, 84, 'Poziom ' + this.level, { fontSize: '32px', fill: '#0f0' });
         this.timerText = this.add.text(16, 118, '', { fontSize: '24px', fill: '#ff0' });
+
+        this.isActuallyCrouching = false;
     }
 
     setupMobileControls() {
@@ -163,44 +164,28 @@ export class GameScene extends Phaser.Scene {
 
         if (!this.isMobile) return;
 
-        // Use a persistent function to update state based on pointer position
         const updateStateFromPointer = (pointer) => {
             const screenWidth = this.cameras.main.width;
-            
-            // Reset horizontal
             this.mobileState.left = false;
             this.mobileState.right = false;
-
             if (pointer.isDown) {
-                // Horizontal movement zones
-                if (pointer.x < screenWidth * 0.33) {
-                    this.mobileState.left = true;
-                } else if (pointer.x > screenWidth * 0.66) {
-                    this.mobileState.right = true;
-                }
+                if (pointer.x < screenWidth * 0.33) this.mobileState.left = true;
+                else if (pointer.x > screenWidth * 0.66) this.mobileState.right = true;
             }
         };
 
         this.input.on('pointerdown', (pointer) => {
             const now = this.time.now;
-            
-            // Double tap for crouch
             if (now - this.lastTap < 300) {
                 this.mobileState.crouch = !this.mobileState.crouch;
             } else {
-                // Single tap for jump (if in middle top area)
-                if (pointer.y < this.cameras.main.height * 0.6) {
-                    this.mobileState.up = true;
-                }
+                if (pointer.y < this.cameras.main.height * 0.6) this.mobileState.up = true;
             }
             this.lastTap = now;
             updateStateFromPointer(pointer);
         });
 
-        this.input.on('pointermove', (pointer) => {
-            updateStateFromPointer(pointer);
-        });
-
+        this.input.on('pointermove', (pointer) => updateStateFromPointer(pointer));
         this.input.on('pointerup', () => {
             this.mobileState.left = false;
             this.mobileState.right = false;
@@ -212,29 +197,22 @@ export class GameScene extends Phaser.Scene {
         this.platforms = this.physics.add.staticGroup();
         this.vines = this.physics.add.staticGroup();
         this.platformArray = [];
-
         let suffix = this.level === 2 ? '_jungle' : (this.level === 3 ? '_lava' : '_normal');
-
         this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
         if (this.level !== 3) {
             this.platformArray.push(this.ground);
         } else {
             this.platformArray.push(this.platforms.create(100, 500, 'platform' + suffix).refreshBody());
         }
-
         let lastY = 568;
         const numPlatforms = this.level === 3 ? 10 : Math.max(4, 7 - Math.floor(this.level / 3));
         for (let i = 0; i < numPlatforms; i++) {
             let x = Phaser.Math.Between(100, 700);
             let y = Phaser.Math.Between(100, 480);
-            while (Math.abs(y - lastY) < 120) {
-                y = Phaser.Math.Between(100, 480);
-            }
+            while (Math.abs(y - lastY) < 120) y = Phaser.Math.Between(100, 480);
             lastY = y;
             this.platformArray.push(this.platforms.create(x, y, 'platform' + suffix));
-            if (Math.random() > 0.3) {
-                this.vines.create(x, y + 50, 'vine').setScale(0.5).refreshBody();
-            }
+            if (Math.random() > 0.3) this.vines.create(x, y + 50, 'vine').setScale(0.5).refreshBody();
         }
     }
 
@@ -244,15 +222,21 @@ export class GameScene extends Phaser.Scene {
         this.isClimbing = false;
         this.physics.overlap(this.player, this.vines, () => { this.isClimbing = true; });
 
-        const isCrouching = this.shiftKey.isDown || this.mobileState.crouch;
-        if (isCrouching && !this.isFlying && !this.isClimbing) {
+        const shouldCrouch = (this.shiftKey.isDown || this.mobileState.crouch) && !this.isFlying && !this.isClimbing;
+        
+        if (shouldCrouch && !this.isActuallyCrouching) {
+            // Start Crouching
             this.player.setScale(this.normalScale, this.crouchScale);
             this.player.body.setSize(32, 24);
             this.player.body.setOffset(0, 24);
-        } else {
+            this.isActuallyCrouching = true;
+        } else if (!shouldCrouch && this.isActuallyCrouching) {
+            // Stop Crouching - IMPORTANT: move up to avoid floor collision glitch
+            this.player.y -= 16; 
             this.player.setScale(this.normalScale);
             this.player.body.setSize(32, 48);
             this.player.body.setOffset(0, 0);
+            this.isActuallyCrouching = false;
         }
 
         const moveUp = this.cursors.up.isDown || this.mobileState.up;
@@ -274,13 +258,9 @@ export class GameScene extends Phaser.Scene {
             this.player.setGravityY(200);
         }
 
-        if (moveLeft) {
-            this.player.setVelocityX(-160);
-        } else if (moveRight) {
-            this.player.setVelocityX(160);
-        } else {
-            this.player.setVelocityX(0);
-        }
+        if (moveLeft) this.player.setVelocityX(-160);
+        else if (moveRight) this.player.setVelocityX(160);
+        else this.player.setVelocityX(0);
 
         if (!this.isFlying && !this.isClimbing && moveUp && this.player.body.touching.down) {
             this.player.setVelocityY(-400);
@@ -298,10 +278,8 @@ export class GameScene extends Phaser.Scene {
         this.isFlying = true;
         this.player.setGravityY(0);
         this.player.setTint(0x2196F3);
-        
         let timeLeft = duration;
         if (this.flyTimer) this.flyTimer.remove();
-        
         this.flyTimer = this.time.addEvent({
             delay: 1000,
             callback: () => {
@@ -311,9 +289,7 @@ export class GameScene extends Phaser.Scene {
                     this.player.setGravityY(200);
                     this.player.clearTint();
                     this.timerText.setText('');
-                } else {
-                    this.timerText.setText('Jetpack: ' + timeLeft + 's');
-                }
+                } else this.timerText.setText('Jetpack: ' + timeLeft + 's');
             },
             repeat: duration
         });
@@ -324,44 +300,24 @@ export class GameScene extends Phaser.Scene {
         this.livesText.setText('Życia: ' + this.lives);
         this.player.setPosition(100, 400); 
         this.player.setVelocity(0, 0);
-        this.tweens.add({
-            targets: this.player,
-            alpha: 0.5,
-            duration: 100,
-            yoyo: true,
-            repeat: 3
-        });
-        if (this.lives <= 0) {
-            this.gameOver(false);
-        }
+        this.tweens.add({ targets: this.player, alpha: 0.5, duration: 100, yoyo: true, repeat: 3 });
+        if (this.lives <= 0) this.gameOver(false);
     }
 
     touchSnake(player, snake) {
         this.lives -= 1;
         this.livesText.setText('Życia: ' + this.lives);
         this.player.setPosition(100, 450);
-        this.tweens.add({
-            targets: this.player,
-            alpha: 0.5,
-            duration: 100,
-            yoyo: true,
-            repeat: 3
-        });
-        if (this.lives <= 0) {
-            this.gameOver(false);
-        }
+        this.tweens.add({ targets: this.player, alpha: 0.5, duration: 100, yoyo: true, repeat: 3 });
+        if (this.lives <= 0) this.gameOver(false);
     }
 
     collectBanana(player, banana) {
         this.tweens.add({
-            targets: banana,
-            scaleX: 0, scaleY: 0,
-            duration: 200,
+            targets: banana, scaleX: 0, scaleY: 0, duration: 200,
             onComplete: () => {
                 banana.disableBody(true, true);
-                if (this.bananas.countActive(true) === 0) {
-                    this.gameOver(true);
-                }
+                if (this.bananas.countActive(true) === 0) this.gameOver(true);
             }
         });
         this.collectedBananas += 1;
@@ -371,46 +327,30 @@ export class GameScene extends Phaser.Scene {
     gameOver(isWin) {
         this.isGameOver = true;
         this.physics.pause();
-        
         const center = this.cameras.main.centerX;
         const middle = this.cameras.main.centerY;
-
         if (isWin) {
             if (this.level === 3) {
                 this.add.text(center, middle - 100, 'UKOŃCZYŁEŚ GRĘ', { fontSize: '64px', fill: '#0f0' }).setOrigin(0.5);
                 this.add.text(center, middle - 30, 'GRATULACJE!', { fontSize: '48px', fill: '#f1c40f' }).setOrigin(0.5);
-                
                 const finishBtn = this.add.text(center, middle + 80, 'KONIEC', { 
                     fontSize: '32px', fill: '#fff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 } 
                 }).setOrigin(0.5).setInteractive();
-
-                finishBtn.on('pointerdown', () => {
-                    window.endGame(this.collectedBananas, 'exit');
-                });
+                finishBtn.on('pointerdown', () => window.endGame(this.collectedBananas, 'exit'));
             } else {
                 this.add.text(center, middle - 100, 'WYGRAŁEŚ!', { fontSize: '64px', fill: '#0f0' }).setOrigin(0.5);
-                
                 const nextBtn = this.add.text(center, middle, 'POZIOM ' + (this.level + 1), { 
                     fontSize: '32px', fill: '#fff', backgroundColor: '#2ecc71', padding: { x: 20, y: 10 } 
                 }).setOrigin(0.5).setInteractive();
-                
                 const exitBtn = this.add.text(center, middle + 80, 'WYJDŹ', { 
                     fontSize: '32px', fill: '#fff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 } 
                 }).setOrigin(0.5).setInteractive();
-
-                nextBtn.on('pointerdown', () => {
-                    window.endGame(this.collectedBananas, 'next_level');
-                });
-
-                exitBtn.on('pointerdown', () => {
-                    window.endGame(this.collectedBananas, 'exit');
-                });
+                nextBtn.on('pointerdown', () => window.endGame(this.collectedBananas, 'next_level'));
+                exitBtn.on('pointerdown', () => window.endGame(this.collectedBananas, 'exit'));
             }
         } else {
             this.add.text(center, middle, 'PRZEGRAŁEŚ', { fontSize: '64px', fill: '#f00' }).setOrigin(0.5);
-            setTimeout(() => {
-                window.endGame(this.collectedBananas, 'exit');
-            }, 2000);
+            setTimeout(() => window.endGame(this.collectedBananas, 'exit'), 2000);
         }
     }
 }
