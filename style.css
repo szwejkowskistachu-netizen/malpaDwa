@@ -29,6 +29,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .screen {
@@ -38,20 +39,27 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 20px;
     background: rgba(0, 0, 0, 0.9);
     transition: opacity 0.5s ease-in-out;
-    padding: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
-/* For screens that are menus, maybe keep a border but center them */
 #start-screen, #shop-screen, #ranking-screen, #name-entry-screen {
-    max-width: 800px;
-    max-height: 600px;
-    border: 4px solid #f1c40f;
-    border-radius: 15px;
-    height: auto;
-    min-height: 300px;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* On larger screens, keep menus contained */
+@media screen and (min-width: 850px) and (min-height: 650px) {
+    #start-screen, #shop-screen, #ranking-screen, #name-entry-screen {
+        width: 800px;
+        height: 600px;
+        border: 4px solid #f1c40f;
+        border-radius: 15px;
+        position: relative;
+    }
 }
 
 .hidden {
@@ -85,6 +93,8 @@ button:hover {
     padding: 0;
     border: none;
     background: #000;
+    width: 100%;
+    height: 100%;
 }
 
 #game-container {
@@ -93,12 +103,15 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
 }
 
+/* Ensure Phaser canvas is truly centered and filling */
 canvas {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    max-width: 100vw;
+    max-height: 100dvh;
 }
 
 #shop-items-container {
@@ -106,7 +119,7 @@ canvas {
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    max-height: 50vh;
+    max-height: 60vh;
     overflow-y: auto;
     width: 100%;
     padding: 10px;
@@ -157,21 +170,4 @@ canvas {
     color: #f1c40f;
     font-weight: bold;
     text-align: center;
-}
-
-@media screen and (max-width: 600px) {
-    .screen {
-        border-width: 2px;
-        gap: 15px;
-    }
-    .monkey-placeholder {
-        font-size: 80px;
-    }
-    h1 {
-        font-size: 24px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 16px;
-    }
 }
