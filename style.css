@@ -112,6 +112,8 @@ canvas {
     margin: 0 auto;
     max-width: 100vw;
     max-height: 100dvh;
+    border: 2px solid #f1c40f; /* Yellow border around the game field */
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
 }
 
 #shop-items-container {
