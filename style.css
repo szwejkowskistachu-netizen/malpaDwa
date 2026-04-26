@@ -66,8 +66,10 @@ body {
 
 #menu-buttons {
     display: flex;
-    gap: 20px;
+    flex-direction: column; /* Stack vertically for better centering */
+    gap: 15px;
     justify-content: center;
+    align-items: center;
     width: 100%;
 }
 
@@ -80,7 +82,7 @@ button {
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     font-weight: bold;
-    min-width: 140px;
+    width: 220px; /* Uniform width for better centering appearance */
     color: #000;
 }
 
