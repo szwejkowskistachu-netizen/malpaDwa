@@ -46,6 +46,11 @@ function updateStartScreen() {
     if (display) {
         display.innerText = `Twoje Banany: ${gameState.bananas}`;
     }
+    const playerCount = document.getElementById('player-count-display');
+    if (playerCount) {
+        const totalPlayers = Object.keys(gameState.userTotals || {}).length;
+        playerCount.innerText = `Liczba Graczy: ${totalPlayers}`;
+    }
 }
 
 function renderShop() {
