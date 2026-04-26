@@ -9,7 +9,7 @@ const screens = {
     nameEntry: document.getElementById('name-entry-screen')
 };
 
-// State management with some mock competitors for the "Global" feel
+// State management
 const defaultState = {
     bananas: 100,
     ownedItems: [],
