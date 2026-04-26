@@ -20,11 +20,7 @@ const defaultState = {
     currentSkin: 'default',
     winsCount: 0,
     currentLevel: 1,
-    userTotals: {
-        'MałpiKról': 15000,
-        'BananowyJoe': 12500,
-        'DżunglowyMistrz': 8900
-    },
+    userTotals: {}, // Cleared all bots
     currentUsername: localStorage.getItem('monkeyGame_user') || null
 };
 
@@ -56,7 +52,6 @@ async function fetchGlobalRanking() {
     try {
         const response = await fetch(DATABASE_URL);
         const data = await response.json();
-        // Assume data is an array of [name, bananas]
         data.forEach(entry => {
             const name = entry[0];
             const total = parseInt(entry[1]);
@@ -75,10 +70,9 @@ async function fetchGlobalRanking() {
 async function saveToGlobalDatabase(name, total) {
     if (!DATABASE_URL) return;
     try {
-        // Simple POST to the Google script
         await fetch(DATABASE_URL, {
             method: 'POST',
-            mode: 'no-cors', // Google scripts require this for simple POSTs
+            mode: 'no-cors',
             body: JSON.stringify({ name: name, bananas: total })
         });
     } catch (e) {
@@ -132,6 +126,11 @@ function renderRanking() {
     const rankingArray = Object.entries(gameState.userTotals).map(([name, total]) => ({ name, total }));
     const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
     
+    if (sorted.length === 0) {
+        scoresList.innerHTML = '<p style="color: #f1c40f;">Ranking jest pusty. Bądź pierwszy!</p>';
+        return;
+    }
+
     sorted.forEach((entry, index) => {
         const div = document.createElement('div');
         div.className = 'skin-item';
