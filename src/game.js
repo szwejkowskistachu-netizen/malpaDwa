@@ -30,7 +30,6 @@ export class GameScene extends Phaser.Scene {
             g.fillStyle(0x000000, 1);
             g.fillCircle(13, 17, 1);
             g.fillCircle(19, 17, 1);
-
             if (skin === 'desek') {
                 g.fillStyle(0x228B22, 1);
                 g.fillRect(6, 6, 20, 6);
@@ -48,7 +47,6 @@ export class GameScene extends Phaser.Scene {
         let suffix = this.level === 2 ? '_jungle' : (this.level === 3 ? '_lava' : '_normal');
         let platformColor = 0xA0522D;
         let groundColor = 0x5D4037;
-        
         if (this.level === 2) {
             platformColor = 0x228B22;
             groundColor = 0x004400;
@@ -117,14 +115,20 @@ export class GameScene extends Phaser.Scene {
         else this.cameras.main.setBackgroundColor('#0d1b2a');
 
         this.generateMap();
+        
         this.normalScale = 0.8;
         this.crouchScale = 0.4;
-        this.player = this.physics.add.sprite(100, 450, 'player_' + currentSkin).setScale(this.normalScale);
+        this.player = this.physics.add.sprite(100, 400, 'player_' + currentSkin).setScale(this.normalScale);
         this.player.setBounce(0.1);
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(30, 45);
         this.physics.add.collider(this.player, this.platforms);
-        if (this.level === 3) this.physics.add.overlap(this.player, this.ground, this.touchLava, null, this);
+        
+        if (this.level === 3) {
+            // Dangerous Lava
+            this.physics.add.overlap(this.player, this.lavaGround, this.touchLava, null, this);
+        }
+
         this.player.setGravityY(200);
 
         this.snakes = this.physics.add.group();
@@ -200,15 +204,23 @@ export class GameScene extends Phaser.Scene {
         this.vines = this.physics.add.staticGroup();
         this.platformArray = [];
         let suffix = this.level === 2 ? '_jungle' : (this.level === 3 ? '_lava' : '_normal');
-        this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
-        if (this.level !== 3) this.platformArray.push(this.ground);
-        else this.platformArray.push(this.platforms.create(100, 500, 'platform' + suffix).refreshBody());
-        let lastY = 568;
+        
+        if (this.level === 3) {
+            // Create LAVA as a non-solid overlap zone
+            this.lavaGround = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
+            // Start platform
+            this.platformArray.push(this.platforms.create(100, 450, 'platform' + suffix).refreshBody());
+        } else {
+            this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
+            this.platformArray.push(this.ground);
+        }
+
+        let lastY = 500;
         const numPlatforms = this.level === 3 ? 10 : 7;
         for (let i = 0; i < numPlatforms; i++) {
             let x = Phaser.Math.Between(100, 700);
-            let y = Phaser.Math.Between(100, 480);
-            while (Math.abs(y - lastY) < 110) y = Phaser.Math.Between(100, 480);
+            let y = Phaser.Math.Between(100, 450);
+            while (Math.abs(y - lastY) < 110) y = Phaser.Math.Between(100, 450);
             lastY = y;
             this.platformArray.push(this.platforms.create(x, y, 'platform' + suffix));
             if (Math.random() > 0.3) this.vines.create(x, y + 50, 'vine').setScale(0.5).refreshBody();
@@ -277,7 +289,8 @@ export class GameScene extends Phaser.Scene {
     touchLava(player, lava) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
-        this.player.setPosition(100, 400); 
+        // Reset to safety
+        this.player.setPosition(100, 350); 
         this.player.setVelocity(0, 0);
         this.tweens.add({ targets: this.player, alpha: 0.5, duration: 100, yoyo: true, repeat: 3 });
         if (this.lives <= 0) this.gameOver(false);
@@ -286,7 +299,7 @@ export class GameScene extends Phaser.Scene {
     touchSnake(player, snake) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
-        this.player.setPosition(100, 450);
+        this.player.setPosition(100, 350);
         this.tweens.add({ targets: this.player, alpha: 0.5, duration: 100, yoyo: true, repeat: 3 });
         if (this.lives <= 0) this.gameOver(false);
     }
