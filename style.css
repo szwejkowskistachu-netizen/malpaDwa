@@ -1,24 +1,39 @@
-body {
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: #000;
+}
+
+body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
     background: linear-gradient(135deg, #2c3e50, #000);
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden; /* Prevent scrolling on mobile */
-    touch-action: none; /* Disable default touch actions */
+    touch-action: none;
+}
+
+#screens {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .screen {
-    width: 95vw;
-    max-width: 800px;
-    height: 95vh;
-    max-height: 600px;
-    border: 4px solid #f1c40f;
-    border-radius: 15px;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -26,17 +41,25 @@ body {
     gap: 20px;
     background: rgba(0, 0, 0, 0.9);
     transition: opacity 0.5s ease-in-out;
-    padding: 10px;
-    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* For screens that are menus, maybe keep a border but center them */
+#start-screen, #shop-screen, #ranking-screen, #name-entry-screen {
+    max-width: 800px;
+    max-height: 600px;
+    border: 4px solid #f1c40f;
+    border-radius: 15px;
+    height: auto;
+    min-height: 300px;
 }
 
 .hidden {
     display: none !important;
-    opacity: 0;
 }
 
 button {
-    padding: 10px 20px;
+    padding: 12px 24px;
     font-size: 18px;
     background: #f1c40f;
     border: none;
@@ -44,7 +67,8 @@ button {
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     font-weight: bold;
-    min-width: 150px;
+    min-width: 180px;
+    color: #000;
 }
 
 button:hover {
@@ -53,25 +77,36 @@ button:hover {
 }
 
 .monkey-placeholder {
-    font-size: 80px;
+    font-size: 100px;
+    line-height: 1;
+}
+
+#game-screen {
+    padding: 0;
+    border: none;
+    background: #000;
 }
 
 #game-container {
     width: 100%;
     height: 100%;
-    border-radius: 10px;
-    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
 #shop-items-container {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    max-height: 300px;
+    max-height: 50vh;
     overflow-y: auto;
     width: 100%;
     padding: 10px;
@@ -88,51 +123,55 @@ button:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
 }
 
 .skin-item {
-    padding: 10px;
+    padding: 12px;
     border: 2px solid #f1c40f;
     background: #34495e;
-    width: 90%;
-    max-width: 350px;
+    width: 100%;
+    max-width: 380px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 #username-input {
-    padding: 10px;
+    padding: 12px;
     font-size: 18px;
     border-radius: 5px;
     border: 2px solid #f1c40f;
     background: #34495e;
     color: white;
     text-align: center;
-    width: 80%;
+    width: 90%;
+    max-width: 300px;
 }
 
 #final-score-display {
-    font-size: 18px;
+    font-size: 20px;
     color: #f1c40f;
     font-weight: bold;
     text-align: center;
 }
 
-/* Landscape orientation optimization for mobile */
-@media screen and (max-height: 500px) {
+@media screen and (max-width: 600px) {
     .screen {
-        gap: 10px;
+        border-width: 2px;
+        gap: 15px;
     }
     .monkey-placeholder {
-        font-size: 50px;
+        font-size: 80px;
     }
     h1 {
         font-size: 24px;
-        margin: 5px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
     }
 }
