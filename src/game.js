@@ -159,37 +159,43 @@ export class GameScene extends Phaser.Scene {
     }
 
     setupMobileControls() {
-        this.mobileState = { left: false, right: false, up: false, crouch: false };
+        this.mobileState = { left: false, right: false, up: false, down: false, crouch: false };
         this.lastTap = 0;
 
         if (!this.isMobile) return;
 
         const updateStateFromPointer = (pointer) => {
+            if (!pointer.isDown) return;
+            
             const screenWidth = this.cameras.main.width;
-            this.mobileState.left = false;
-            this.mobileState.right = false;
-            if (pointer.isDown) {
-                if (pointer.x < screenWidth * 0.33) this.mobileState.left = true;
-                else if (pointer.x > screenWidth * 0.66) this.mobileState.right = true;
-            }
+            const screenHeight = this.cameras.main.height;
+            
+            // Reset horizontal
+            this.mobileState.left = pointer.x < screenWidth * 0.33;
+            this.mobileState.right = pointer.x > screenWidth * 0.66;
+            
+            // Vertical zones
+            this.mobileState.up = pointer.y < screenHeight * 0.4;
+            this.mobileState.down = pointer.y > screenHeight * 0.7;
         };
 
         this.input.on('pointerdown', (pointer) => {
             const now = this.time.now;
+            // Double tap for crouch (tap middle area)
             if (now - this.lastTap < 300) {
                 this.mobileState.crouch = !this.mobileState.crouch;
-            } else {
-                if (pointer.y < this.cameras.main.height * 0.6) this.mobileState.up = true;
             }
             this.lastTap = now;
             updateStateFromPointer(pointer);
         });
 
         this.input.on('pointermove', (pointer) => updateStateFromPointer(pointer));
+        
         this.input.on('pointerup', () => {
             this.mobileState.left = false;
             this.mobileState.right = false;
             this.mobileState.up = false;
+            this.mobileState.down = false;
         });
     }
 
@@ -225,13 +231,11 @@ export class GameScene extends Phaser.Scene {
         const shouldCrouch = (this.shiftKey.isDown || this.mobileState.crouch) && !this.isFlying && !this.isClimbing;
         
         if (shouldCrouch && !this.isActuallyCrouching) {
-            // Start Crouching
             this.player.setScale(this.normalScale, this.crouchScale);
             this.player.body.setSize(32, 24);
             this.player.body.setOffset(0, 24);
             this.isActuallyCrouching = true;
         } else if (!shouldCrouch && this.isActuallyCrouching) {
-            // Stop Crouching - IMPORTANT: move up to avoid floor collision glitch
             this.player.y -= 16; 
             this.player.setScale(this.normalScale);
             this.player.body.setSize(32, 48);
@@ -240,7 +244,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         const moveUp = this.cursors.up.isDown || this.mobileState.up;
-        const moveDown = this.cursors.down.isDown;
+        const moveDown = this.cursors.down.isDown || this.mobileState.down;
         const moveLeft = this.cursors.left.isDown || this.mobileState.left;
         const moveRight = this.cursors.right.isDown || this.mobileState.right;
 
