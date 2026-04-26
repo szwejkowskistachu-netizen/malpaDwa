@@ -5,7 +5,6 @@ const screens = {
     start: document.getElementById('start-screen'),
     shop: document.getElementById('shop-screen'),
     game: document.getElementById('game-screen'),
-    ranking: document.getElementById('ranking-screen'),
     nameEntry: document.getElementById('name-entry-screen')
 };
 
@@ -33,31 +32,19 @@ function saveState() {
 function updateStartScreen() {
     const display = document.getElementById('total-bananas-display');
     if (display) {
-        display.innerText = `Suma Bananów: ${gameState.bananas}`;
+        display.innerText = `Twoje Banany: ${gameState.bananas}`;
     }
+    renderRanking();
 }
 
 function renderShop() {
     const shopContainer = document.getElementById('shop-screen');
-    shopContainer.innerHTML = `
-        <h1>Sklep</h1>
-        <div id="banana-count">Twoje Banany: ${gameState.bananas}</div>
-        <div id="shop-items-container">
-            <div class="shop-section">
-                <h3>Postacie</h3>
-                <div id="skins-list"></div>
-            </div>
-            <div class="shop-section">
-                <h3>Przedmioty</h3>
-                <div id="items-list"></div>
-            </div>
-        </div>
-        <button class="back-btn">Wróć</button>
-    `;
-    
-    shopContainer.querySelector('.back-btn').addEventListener('click', () => showScreen('start'));
+    const bananaDisplay = shopContainer.querySelector('#banana-count');
+    if (bananaDisplay) bananaDisplay.innerText = `Twoje Banany: ${gameState.bananas}`;
 
+    // Render Skins
     const skinsList = document.getElementById('skins-list');
+    skinsList.innerHTML = '';
     skins.forEach(skin => {
         const isOwned = gameState.ownedSkins.includes(skin.id);
         const isEquipped = gameState.currentSkin === skin.id;
@@ -73,7 +60,9 @@ function renderShop() {
         skinsList.appendChild(skinEl);
     });
 
+    // Render Items
     const itemsList = document.getElementById('items-list');
+    itemsList.innerHTML = '';
     items.forEach(item => {
         const isOwned = gameState.ownedItems.includes(item.id);
         const itemEl = document.createElement('div');
@@ -90,6 +79,7 @@ function renderShop() {
 
 function renderRanking() {
     const scoresList = document.getElementById('scores-list');
+    if (!scoresList) return;
     scoresList.innerHTML = '';
     
     const rankingArray = Object.entries(gameState.userTotals || {}).map(([name, total]) => ({
@@ -98,15 +88,15 @@ function renderRanking() {
     }));
 
     if (rankingArray.length === 0) {
-        scoresList.innerHTML = '<p style="color: #f1c40f;">Brak wyników. Zagraj i zapisz wynik, aby pojawić się w rankingu!</p>';
+        scoresList.innerHTML = '<p style="color: #f1c40f; font-size: 12px;">Zagraj i zapisz wynik, aby dołączyć!</p>';
     } else {
-        const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
+        const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 5); // Show top 5 on start screen
         sorted.forEach((entry, index) => {
             const div = document.createElement('div');
             div.className = 'skin-item';
-            div.style.width = '450px';
-            div.style.color = 'white';
-            div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">Suma: ${entry.total} 🍌</span>`;
+            div.style.padding = '5px 10px';
+            div.style.margin = '2px 0';
+            div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">${entry.total} 🍌</span>`;
             scoresList.appendChild(div);
         });
     }
@@ -174,21 +164,12 @@ window.endGame = (bananasEarned, nextAction) => {
 function submitScore() {
     const nameInput = document.getElementById('username-input');
     const name = nameInput.value.trim();
-    
-    if (!name) {
-        alert("Proszę wpisać imię!");
-        return;
-    }
+    if (!name) { alert("Proszę wpisać imię!"); return; }
     
     gameState.currentUsername = name;
-    
-    // Initialize user in ranking if new
     if (!gameState.userTotals[name]) {
         gameState.userTotals[name] = gameState.bananas;
     } 
-    // If name entry is happening, bananasEarned was already added to gameState.bananas
-    // but userTotals[name] wasn't updated yet because currentUsername was null.
-    // So for the FIRST time registration, userTotals[name] = gameState.bananas is correct.
     
     gameState.currentLevel = 1;
     saveState();
@@ -198,14 +179,13 @@ function submitScore() {
 
 function showScreen(screenId) {
     Object.values(screens).forEach(screen => screen.classList.add('hidden'));
-    screens[screenId].classList.remove('hidden');
+    const target = screens[screenId];
+    if (target) target.classList.remove('hidden');
 
     if (screenId === 'start') {
         updateStartScreen();
     } else if (screenId === 'shop') {
         renderShop();
-    } else if (screenId === 'ranking') {
-        renderRanking();
     } else if (screenId === 'game') {
         if (!window.game) {
             const gameConfig = { ...config };
@@ -227,9 +207,6 @@ document.getElementById('play-btn').addEventListener('click', () => {
 });
 document.getElementById('shop-btn').addEventListener('click', () => {
     showScreen('shop');
-});
-document.getElementById('ranking-btn').addEventListener('click', () => {
-    showScreen('ranking');
 });
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
 document.querySelectorAll('.back-btn').forEach(btn => {

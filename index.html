@@ -13,13 +13,28 @@
             <h1>Monkey Game</h1>
             <div id="total-bananas-display" style="color: #f1c40f; font-size: 24px; font-weight: bold;">Banany: 0</div>
             <div class="monkey-placeholder">🐒</div>
-            <button id="play-btn">GRAJ</button>
-            <button id="shop-btn">SKLEP</button>
-            <button id="ranking-btn">RANKING</button>
+            <div id="menu-buttons">
+                <button id="play-btn">GRAJ</button>
+                <button id="shop-btn">SKLEP</button>
+            </div>
+            <div id="start-ranking-container">
+                <h3>Ranking (Total)</h3>
+                <div id="scores-list"></div>
+            </div>
         </div>
-        <div id="ranking-screen" class="screen hidden">
-            <h1>Ranking</h1>
-            <div id="scores-list"></div>
+        <div id="shop-screen" class="screen hidden">
+            <h1>Sklep</h1>
+            <div id="banana-count">Twoje Banany: 0</div>
+            <div id="shop-items-container">
+                <div class="shop-section">
+                    <h3>Postacie</h3>
+                    <div id="skins-list"></div>
+                </div>
+                <div class="shop-section">
+                    <h3>Przedmioty</h3>
+                    <div id="items-list"></div>
+                </div>
+            </div>
             <button class="back-btn">Wróć</button>
         </div>
         <div id="name-entry-screen" class="screen hidden">
@@ -27,10 +42,6 @@
             <div id="final-score-display"></div>
             <input type="text" id="username-input" placeholder="Wpisz swoje imię" maxlength="15">
             <button id="submit-score-btn">ZAPISZ I WYJDŹ</button>
-        </div>
-        <div id="shop-screen" class="screen hidden">
-            <h1>Sklep</h1>
-            <button class="back-btn">Wróć</button>
         </div>
         <div id="game-screen" class="screen hidden">
             <div id="game-container"></div>
