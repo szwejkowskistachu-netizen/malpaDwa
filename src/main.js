@@ -27,7 +27,12 @@ const defaultState = {
     currentUsername: null
 };
 let gameState = JSON.parse(localStorage.getItem('monkeyGame')) || defaultState;
+
+// Merge with default state to ensure all fields exist
 gameState = { ...defaultState, ...gameState };
+
+// Explicitly merge userTotals to ensure mock bots are included if not present
+gameState.userTotals = { ...defaultState.userTotals, ...gameState.userTotals };
 
 let currentRunScore = 0;
 
