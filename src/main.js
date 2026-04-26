@@ -9,7 +9,7 @@ const screens = {
     nameEntry: document.getElementById('name-entry-screen')
 };
 
-// State management
+// State management with some mock competitors for the "Global" feel
 const defaultState = {
     bananas: 100,
     ownedItems: [],
@@ -17,7 +17,13 @@ const defaultState = {
     currentSkin: 'default',
     winsCount: 0,
     currentLevel: 1,
-    userTotals: {},
+    userTotals: {
+        'MałpiKról': 15000,
+        'BananowyJoe': 12500,
+        'DżunglowyMistrz': 8900,
+        'SzybkiSzympans': 5400,
+        'Zbieracz2000': 3200
+    },
     currentUsername: null
 };
 let gameState = JSON.parse(localStorage.getItem('monkeyGame')) || defaultState;
@@ -42,7 +48,6 @@ function renderShop() {
     const bananaDisplay = shopContainer.querySelector('#banana-count');
     if (bananaDisplay) bananaDisplay.innerText = `Twoje Banany: ${gameState.bananas}`;
 
-    // Render Skins
     const skinsList = document.getElementById('skins-list');
     skinsList.innerHTML = '';
     skins.forEach(skin => {
@@ -60,7 +65,6 @@ function renderShop() {
         skinsList.appendChild(skinEl);
     });
 
-    // Render Items
     const itemsList = document.getElementById('items-list');
     itemsList.innerHTML = '';
     items.forEach(item => {
@@ -88,7 +92,7 @@ function renderRanking() {
     }));
 
     if (rankingArray.length === 0) {
-        scoresList.innerHTML = '<p style="color: #f1c40f;">Brak wyników. Zagraj i zapisz wynik, aby dołączyć!</p>';
+        scoresList.innerHTML = '<p style="color: #f1c40f;">Brak wyników. Zagraj i zapisz wynik!</p>';
     } else {
         const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
         sorted.forEach((entry, index) => {
