@@ -5,6 +5,7 @@ const screens = {
     start: document.getElementById('start-screen'),
     shop: document.getElementById('shop-screen'),
     game: document.getElementById('game-screen'),
+    ranking: document.getElementById('ranking-screen'),
     nameEntry: document.getElementById('name-entry-screen')
 };
 
@@ -34,7 +35,6 @@ function updateStartScreen() {
     if (display) {
         display.innerText = `Twoje Banany: ${gameState.bananas}`;
     }
-    renderRanking();
 }
 
 function renderShop() {
@@ -88,15 +88,15 @@ function renderRanking() {
     }));
 
     if (rankingArray.length === 0) {
-        scoresList.innerHTML = '<p style="color: #f1c40f; font-size: 12px;">Zagraj i zapisz wynik, aby dołączyć!</p>';
+        scoresList.innerHTML = '<p style="color: #f1c40f;">Brak wyników. Zagraj i zapisz wynik, aby dołączyć!</p>';
     } else {
-        const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 5); // Show top 5 on start screen
+        const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
         sorted.forEach((entry, index) => {
             const div = document.createElement('div');
             div.className = 'skin-item';
-            div.style.padding = '5px 10px';
-            div.style.margin = '2px 0';
-            div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">${entry.total} 🍌</span>`;
+            div.style.width = '450px';
+            div.style.color = 'white';
+            div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">Suma: ${entry.total} 🍌</span>`;
             scoresList.appendChild(div);
         });
     }
@@ -186,6 +186,8 @@ function showScreen(screenId) {
         updateStartScreen();
     } else if (screenId === 'shop') {
         renderShop();
+    } else if (screenId === 'ranking') {
+        renderRanking();
     } else if (screenId === 'game') {
         if (!window.game) {
             const gameConfig = { ...config };
@@ -208,6 +210,9 @@ document.getElementById('play-btn').addEventListener('click', () => {
 document.getElementById('shop-btn').addEventListener('click', () => {
     showScreen('shop');
 });
+document.getElementById('ranking-btn').addEventListener('click', () => {
+    showScreen('ranking');
+});
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
 document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -215,5 +220,4 @@ document.querySelectorAll('.back-btn').forEach(btn => {
     });
 });
 
-// Initial call
 updateStartScreen();
