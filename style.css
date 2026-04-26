@@ -20,7 +20,7 @@ body {
     background: linear-gradient(135deg, #2c3e50, #000);
     color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    touch-action: none;
+    touch-action: manipulation;
 }
 
 #screens {
@@ -128,6 +128,13 @@ canvas {
     overflow-y: auto;
     width: 100%;
     padding: 10px;
+    -webkit-overflow-scrolling: touch;
+}
+
+#scores-list {
+    overflow-y: auto;
+    max-height: 60vh;
+    -webkit-overflow-scrolling: touch;
 }
 
 .shop-section {
