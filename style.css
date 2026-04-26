@@ -119,7 +119,7 @@ canvas {
     max-height: 100%;
 }
 
-#shop-items-container {
+#shop-items-container, #scores-list {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
@@ -131,10 +131,29 @@ canvas {
     -webkit-overflow-scrolling: touch;
 }
 
-#scores-list {
-    overflow-y: auto;
-    max-height: 60vh;
-    -webkit-overflow-scrolling: touch;
+/* Custom Visible Scrollbar */
+#shop-items-container::-webkit-scrollbar, 
+#scores-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+#shop-items-container::-webkit-scrollbar-track, 
+#scores-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+#shop-items-container::-webkit-scrollbar-thumb, 
+#scores-list::-webkit-scrollbar-thumb {
+    background: #f1c40f;
+    border-radius: 10px;
+    border: 2px solid #34495e;
+}
+
+/* For Firefox */
+#shop-items-container, #scores-list {
+    scrollbar-width: thin;
+    scrollbar-color: #f1c40f rgba(255, 255, 255, 0.1);
 }
 
 .shop-section {
