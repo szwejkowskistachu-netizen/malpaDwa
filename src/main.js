@@ -1,9 +1,7 @@
 import { config, items, skins } from './config.js';
 
 // --- GOOGLE APPS SCRIPT URL ---
-// Paste your Web App URL here after deploying the script
 const DATABASE_URL = 'https://script.google.com/macros/s/AKfycbyBBi6thMErXrz6_W8s3PfNR7JPFIggo5wfC-TMUI4njAyja6PEkaZPWVVBkZrgx_dIxw/exec'; 
-// ------------------------------
 
 const screens = {
     start: document.getElementById('start-screen'),
@@ -13,6 +11,7 @@ const screens = {
     nameEntry: document.getElementById('name-entry-screen')
 };
 
+// Clean default state
 const defaultState = {
     bananas: 100,
     ownedItems: [],
@@ -20,19 +19,23 @@ const defaultState = {
     currentSkin: 'default',
     winsCount: 0,
     currentLevel: 1,
-    userTotals: {}, // Cleared all bots
-    currentUsername: localStorage.getItem('monkeyGame_user') || null
+    userTotals: {},
+    currentUsername: localStorage.getItem('monkeyGame_user_v2') || null
 };
 
-let gameState = JSON.parse(localStorage.getItem('monkeyGame')) || defaultState;
+// Use a new versioned key to force a clean start and remove any saved bots
+const STORAGE_KEY = 'monkeyGame_v2';
+let gameState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState;
 gameState = { ...defaultState, ...gameState };
 
 let currentRunScore = 0;
 
+const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
+
 function saveState() {
-    localStorage.setItem('monkeyGame', JSON.stringify(gameState));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
     if (gameState.currentUsername) {
-        localStorage.setItem('monkeyGame_user', gameState.currentUsername);
+        localStorage.setItem('monkeyGame_user_v2', gameState.currentUsername);
     }
     updateStartScreen();
 }
@@ -55,7 +58,8 @@ async function fetchGlobalRanking() {
         data.forEach(entry => {
             const name = entry[0];
             const total = parseInt(entry[1]);
-            if (name && !isNaN(total)) {
+            // Ignore any names that match the bots list
+            if (name && !isNaN(total) && !botNames.includes(name)) {
                 if (!gameState.userTotals[name] || total > gameState.userTotals[name]) {
                     gameState.userTotals[name] = total;
                 }
@@ -68,7 +72,7 @@ async function fetchGlobalRanking() {
 }
 
 async function saveToGlobalDatabase(name, total) {
-    if (!DATABASE_URL) return;
+    if (!DATABASE_URL || botNames.includes(name)) return;
     try {
         await fetch(DATABASE_URL, {
             method: 'POST',
@@ -123,7 +127,11 @@ function renderRanking() {
     if (!scoresList) return;
     scoresList.innerHTML = '';
     
-    const rankingArray = Object.entries(gameState.userTotals).map(([name, total]) => ({ name, total }));
+    // Filter out bots again just to be absolutely sure
+    const rankingArray = Object.entries(gameState.userTotals)
+        .filter(([name]) => !botNames.includes(name))
+        .map(([name, total]) => ({ name, total }));
+
     const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
     
     if (sorted.length === 0) {
