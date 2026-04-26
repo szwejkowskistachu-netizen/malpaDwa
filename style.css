@@ -104,17 +104,18 @@ button:hover {
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    padding: 5px; /* Space for the border to be visible on mobile */
 }
 
 /* Ensure Phaser canvas is truly centered and filling */
 canvas {
     display: block;
     margin: 0 auto;
-    max-width: 100vw;
-    max-height: 100dvh;
-    border: 2px solid #f1c40f; /* Yellow border around the game field */
+    max-width: 100%;
+    max-height: 100%;
+    border: 3px solid #f1c40f; /* Slightly thicker yellow border */
     border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 0 20px rgba(241, 196, 15, 0.3);
+    box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
 }
 
 #shop-items-container {
