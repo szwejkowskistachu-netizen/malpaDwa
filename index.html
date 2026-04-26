@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monkey Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="screens">
+        <div id="start-screen" class="screen">
+            <h1>Monkey Game</h1>
+            <div id="total-bananas-display" style="color: #f1c40f; font-size: 24px; font-weight: bold;">Banany: 0</div>
+            <div class="monkey-placeholder">🐒</div>
+            <button id="play-btn">GRAJ</button>
+            <button id="shop-btn">SKLEP</button>
+            <button id="ranking-btn">RANKING</button>
+        </div>
+        <div id="ranking-screen" class="screen hidden">
+            <h1>Ranking</h1>
+            <div id="scores-list"></div>
+            <button class="back-btn">Wróć</button>
+        </div>
+        <div id="name-entry-screen" class="screen hidden">
+            <h1>Twój Wynik!</h1>
+            <div id="final-score-display"></div>
+            <input type="text" id="username-input" placeholder="Wpisz swoje imię" maxlength="15">
+            <button id="submit-score-btn">ZAPISZ I WYJDŹ</button>
+        </div>
+        <div id="shop-screen" class="screen hidden">
+            <h1>Sklep</h1>
+            <button class="back-btn">Wróć</button>
+        </div>
+        <div id="game-screen" class="screen hidden">
+            <div id="game-container"></div>
+        </div>
+    </div>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
