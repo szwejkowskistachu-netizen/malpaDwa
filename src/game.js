@@ -44,7 +44,11 @@ export class GameScene extends Phaser.Scene {
         drawMonkey(graphics, 'desek');
         graphics.generateTexture('player_desek', 32, 48);
 
-        let suffix = this.level === 2 ? '_jungle' : (this.level === 3 ? '_lava' : '_normal');
+        let suffix = '_normal';
+        if (this.level === 2) suffix = '_jungle';
+        else if (this.level === 3) suffix = '_lava';
+        else if (this.level === 4) suffix = '_city';
+        
         let platformColor = 0xA0522D;
         let groundColor = 0x5D4037;
         if (this.level === 2) {
@@ -53,48 +57,79 @@ export class GameScene extends Phaser.Scene {
         } else if (this.level === 3) {
             platformColor = 0x444444;
             groundColor = 0xFF4500;
+        } else if (this.level === 4) {
+            platformColor = 0x555555; // Building gray
+            groundColor = 0x222222; // Road dark gray
         }
 
+        // Platform / Building
         graphics.clear();
         graphics.fillStyle(platformColor, 1);
         graphics.fillRect(0, 0, 200, 32);
-        graphics.fillStyle(0x000000, 0.1);
-        for(let i=0; i<5; i++) graphics.fillRect(0, 5 + (i*6), 200, 2);
+        if (this.level === 4) {
+            graphics.fillStyle(0xffff00, 0.5); // Windows
+            for(let i=0; i<4; i++) graphics.fillRect(10 + (i*50), 10, 20, 15);
+        } else {
+            graphics.fillStyle(0x000000, 0.1);
+            for(let i=0; i<5; i++) graphics.fillRect(0, 5 + (i*6), 200, 2);
+        }
         graphics.generateTexture('platform' + suffix, 200, 32);
 
+        // Ground / Road
         graphics.clear();
         graphics.fillStyle(groundColor, 1);
         graphics.fillRect(0, 0, 800, 32);
-        if (this.level !== 3) {
+        if (this.level === 4) {
+            graphics.fillStyle(0xffffff, 0.8); // Road lines
+            for(let i=0; i<10; i++) graphics.fillRect(10 + (i*80), 14, 40, 4);
+        } else if (this.level !== 3) {
             graphics.fillStyle(0x2E7D32, 1);
             graphics.fillRect(0, 0, 800, 6);
         }
         graphics.generateTexture('ground' + suffix, 800, 32);
 
+        // Banana
         graphics.clear();
         graphics.fillStyle(0xFFEB3B, 1);
         graphics.fillEllipse(10, 10, 18, 8);
         graphics.generateTexture('banana', 20, 20);
 
+        // Snake / Policeman
         graphics.clear();
-        graphics.fillStyle(0x4CAF50, 1);
-        graphics.fillEllipse(20, 10, 35, 12);
-        graphics.fillStyle(0xffffff, 1);
-        graphics.fillCircle(34, 7, 3);
-        graphics.fillStyle(0x000000, 1);
-        graphics.fillCircle(35, 7, 1);
-        graphics.generateTexture('snake', 44, 20);
-
-        graphics.clear();
-        graphics.fillStyle(0x5D4037, 1);
-        graphics.fillRect(8, 0, 4, 100);
-        graphics.fillStyle(0x2E7D32, 1);
-        for(let i=0; i<5; i++) {
-            graphics.fillEllipse(14, 10 + (i*20), 10, 6);
-            graphics.fillEllipse(6, 20 + (i*20), 10, 6);
+        if (this.level === 4) {
+            graphics.fillStyle(0x0000FF, 1); // Blue uniform
+            graphics.fillCircle(20, 10, 10);
+            graphics.fillStyle(0x000000, 1); // Hat
+            graphics.fillRect(10, 0, 20, 5);
+            graphics.fillStyle(0xffcc99, 1); // Face
+            graphics.fillCircle(20, 12, 6);
+        } else {
+            graphics.fillStyle(0x4CAF50, 1);
+            graphics.fillEllipse(20, 10, 35, 12);
+            graphics.fillStyle(0xffffff, 1);
+            graphics.fillCircle(34, 7, 3);
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillCircle(35, 7, 1);
         }
-        graphics.generateTexture('vine', 20, 100);
+        graphics.generateTexture('enemy', 44, 20);
 
+        // Vine / Rope
+        graphics.clear();
+        if (this.level === 4) {
+            graphics.fillStyle(0xCCCCCC, 1); // Gray rope
+            graphics.fillRect(9, 0, 2, 100);
+        } else {
+            graphics.fillStyle(0x5D4037, 1);
+            graphics.fillRect(8, 0, 4, 100);
+            graphics.fillStyle(0x2E7D32, 1);
+            for(let i=0; i<5; i++) {
+                graphics.fillEllipse(14, 10 + (i*20), 10, 6);
+                graphics.fillEllipse(6, 20 + (i*20), 10, 6);
+            }
+        }
+        graphics.generateTexture('climbable', 20, 100);
+
+        // Jetpack
         graphics.clear();
         graphics.fillStyle(0x2196F3, 1);
         graphics.fillRect(0, 0, 20, 30);
@@ -112,6 +147,7 @@ export class GameScene extends Phaser.Scene {
 
         if (this.level === 2) this.cameras.main.setBackgroundColor('#1a2f1a');
         else if (this.level === 3) this.cameras.main.setBackgroundColor('#2f1a1a');
+        else if (this.level === 4) this.cameras.main.setBackgroundColor('#001122'); // Night City
         else this.cameras.main.setBackgroundColor('#0d1b2a');
 
         this.generateMap();
@@ -125,24 +161,24 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.collider(this.player, this.platforms);
         
         if (this.level === 3) {
-            // Dangerous Lava
             this.physics.add.overlap(this.player, this.lavaGround, this.touchLava, null, this);
         }
 
         this.player.setGravityY(200);
 
-        this.snakes = this.physics.add.group();
-        this.physics.add.collider(this.snakes, this.platforms);
+        this.enemies = this.physics.add.group();
+        this.physics.add.collider(this.enemies, this.platforms);
+        
         if (this.level !== 3) {
-            const numSnakes = 1 + Math.floor(this.level / 2);
-            for (let i = 0; i < numSnakes; i++) {
-                const snake = this.snakes.create(Phaser.Math.Between(200, 700), Phaser.Math.Between(100, 500), 'snake');
-                snake.setCollideWorldBounds(true);
-                snake.setGravityY(0); 
-                this.physics.add.overlap(this.player, snake, this.touchSnake, null, this);
+            const numEnemies = this.level === 4 ? 2 : (1 + Math.floor(this.level / 2));
+            for (let i = 0; i < numEnemies; i++) {
+                const enemy = this.enemies.create(Phaser.Math.Between(200, 700), Phaser.Math.Between(100, 500), 'enemy');
+                enemy.setCollideWorldBounds(true);
+                enemy.setGravityY(0); 
+                this.physics.add.overlap(this.player, enemy, this.touchEnemy, null, this);
                 const speed = 80 + (this.level * 10);
-                snake.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
-                snake.setBounce(1);
+                enemy.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
+                enemy.setBounce(1);
             }
         }
 
@@ -203,12 +239,13 @@ export class GameScene extends Phaser.Scene {
         this.platforms = this.physics.add.staticGroup();
         this.vines = this.physics.add.staticGroup();
         this.platformArray = [];
-        let suffix = this.level === 2 ? '_jungle' : (this.level === 3 ? '_lava' : '_normal');
+        let suffix = '_normal';
+        if (this.level === 2) suffix = '_jungle';
+        else if (this.level === 3) suffix = '_lava';
+        else if (this.level === 4) suffix = '_city';
         
         if (this.level === 3) {
-            // Create LAVA as a non-solid overlap zone
             this.lavaGround = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
-            // Start platform
             this.platformArray.push(this.platforms.create(100, 450, 'platform' + suffix).refreshBody());
         } else {
             this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
@@ -216,14 +253,14 @@ export class GameScene extends Phaser.Scene {
         }
 
         let lastY = 500;
-        const numPlatforms = this.level === 3 ? 10 : 7;
+        const numPlatforms = this.level === 3 ? 10 : 8;
         for (let i = 0; i < numPlatforms; i++) {
             let x = Phaser.Math.Between(100, 700);
             let y = Phaser.Math.Between(100, 450);
             while (Math.abs(y - lastY) < 110) y = Phaser.Math.Between(100, 450);
             lastY = y;
             this.platformArray.push(this.platforms.create(x, y, 'platform' + suffix));
-            if (Math.random() > 0.3) this.vines.create(x, y + 50, 'vine').setScale(0.5).refreshBody();
+            if (Math.random() > 0.3) this.vines.create(x, y + 50, 'climbable').setScale(0.5).refreshBody();
         }
     }
 
@@ -289,14 +326,13 @@ export class GameScene extends Phaser.Scene {
     touchLava(player, lava) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
-        // Reset to safety
         this.player.setPosition(100, 350); 
         this.player.setVelocity(0, 0);
         this.tweens.add({ targets: this.player, alpha: 0.5, duration: 100, yoyo: true, repeat: 3 });
         if (this.lives <= 0) this.gameOver(false);
     }
 
-    touchSnake(player, snake) {
+    touchEnemy(player, enemy) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
         this.player.setPosition(100, 350);
@@ -322,7 +358,7 @@ export class GameScene extends Phaser.Scene {
         const center = this.cameras.main.centerX;
         const middle = this.cameras.main.centerY;
         if (isWin) {
-            if (this.level === 3) {
+            if (this.level === 4) {
                 this.add.text(center, middle - 100, 'UKOŃCZYŁEŚ GRĘ', { fontSize: '64px', fill: '#0f0', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5);
                 this.add.text(center, middle - 30, 'GRATULACJE!', { fontSize: '48px', fill: '#f1c40f', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
                 const finishBtn = this.add.text(center, middle + 80, 'KONIEC', { fontSize: '32px', fill: '#fff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
