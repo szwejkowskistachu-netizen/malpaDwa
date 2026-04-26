@@ -1,6 +1,10 @@
 import { config, items, skins } from './config.js';
 
-// Screen management
+// --- GOOGLE APPS SCRIPT URL ---
+// Paste your Web App URL here after deploying the script
+const DATABASE_URL = 'https://script.google.com/macros/s/AKfycbyBBi6thMErXrz6_W8s3PfNR7JPFIggo5wfC-TMUI4njAyja6PEkaZPWVVBkZrgx_dIxw/exec'; 
+// ------------------------------
+
 const screens = {
     start: document.getElementById('start-screen'),
     shop: document.getElementById('shop-screen'),
@@ -9,7 +13,6 @@ const screens = {
     nameEntry: document.getElementById('name-entry-screen')
 };
 
-// State management
 const defaultState = {
     bananas: 100,
     ownedItems: [],
@@ -20,36 +23,66 @@ const defaultState = {
     userTotals: {
         'MałpiKról': 15000,
         'BananowyJoe': 12500,
-        'DżunglowyMistrz': 8900,
-        'SzybkiSzympans': 5400,
-        'Zbieracz2000': 3200
+        'DżunglowyMistrz': 8900
     },
-    currentUsername: null
+    currentUsername: localStorage.getItem('monkeyGame_user') || null
 };
+
 let gameState = JSON.parse(localStorage.getItem('monkeyGame')) || defaultState;
-
-// Merge with default state to ensure all fields exist
 gameState = { ...defaultState, ...gameState };
-
-// Explicitly merge userTotals to ensure mock bots are included if not present
-gameState.userTotals = { ...defaultState.userTotals, ...gameState.userTotals };
 
 let currentRunScore = 0;
 
 function saveState() {
     localStorage.setItem('monkeyGame', JSON.stringify(gameState));
+    if (gameState.currentUsername) {
+        localStorage.setItem('monkeyGame_user', gameState.currentUsername);
+    }
     updateStartScreen();
 }
 
 function updateStartScreen() {
     const display = document.getElementById('total-bananas-display');
-    if (display) {
-        display.innerText = `Twoje Banany: ${gameState.bananas}`;
-    }
+    if (display) display.innerText = `Twoje Banany: ${gameState.bananas}`;
     const playerCount = document.getElementById('player-count-display');
     if (playerCount) {
-        const totalPlayers = Object.keys(gameState.userTotals || {}).length;
+        const totalPlayers = Object.keys(gameState.userTotals).length;
         playerCount.innerText = `Liczba Graczy: ${totalPlayers}`;
+    }
+}
+
+async function fetchGlobalRanking() {
+    if (!DATABASE_URL) return;
+    try {
+        const response = await fetch(DATABASE_URL);
+        const data = await response.json();
+        // Assume data is an array of [name, bananas]
+        data.forEach(entry => {
+            const name = entry[0];
+            const total = parseInt(entry[1]);
+            if (name && !isNaN(total)) {
+                if (!gameState.userTotals[name] || total > gameState.userTotals[name]) {
+                    gameState.userTotals[name] = total;
+                }
+            }
+        });
+        renderRanking();
+    } catch (e) {
+        console.error("Database fetch error:", e);
+    }
+}
+
+async function saveToGlobalDatabase(name, total) {
+    if (!DATABASE_URL) return;
+    try {
+        // Simple POST to the Google script
+        await fetch(DATABASE_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Google scripts require this for simple POSTs
+            body: JSON.stringify({ name: name, bananas: total })
+        });
+    } catch (e) {
+        console.error("Database save error:", e);
     }
 }
 
@@ -96,33 +129,24 @@ function renderRanking() {
     if (!scoresList) return;
     scoresList.innerHTML = '';
     
-    const rankingArray = Object.entries(gameState.userTotals || {}).map(([name, total]) => ({
-        name,
-        total
-    }));
-
-    if (rankingArray.length === 0) {
-        scoresList.innerHTML = '<p style="color: #f1c40f;">Brak wyników. Zagraj i zapisz wynik!</p>';
-    } else {
-        const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
-        sorted.forEach((entry, index) => {
-            const div = document.createElement('div');
-            div.className = 'skin-item';
-            div.style.width = '450px';
-            div.style.color = 'white';
-            div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">Suma: ${entry.total} 🍌</span>`;
-            scoresList.appendChild(div);
-        });
-    }
+    const rankingArray = Object.entries(gameState.userTotals).map(([name, total]) => ({ name, total }));
+    const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
+    
+    sorted.forEach((entry, index) => {
+        const div = document.createElement('div');
+        div.className = 'skin-item';
+        div.style.width = '450px';
+        div.style.color = 'white';
+        div.innerHTML = `<span>#${index + 1} ${entry.name}</span> <span style="color: #f1c40f;">${entry.total} 🍌</span>`;
+        scoresList.appendChild(div);
+    });
 }
 
 window.buySkin = (skinId) => {
     const skin = skins.find(s => s.id === skinId);
     if (skin && gameState.bananas >= skin.price) {
         gameState.bananas -= skin.price;
-        if (!gameState.ownedSkins.includes(skinId)) {
-            gameState.ownedSkins.push(skinId);
-        }
+        if (!gameState.ownedSkins.includes(skinId)) gameState.ownedSkins.push(skinId);
         saveState();
         renderShop();
     }
@@ -138,9 +162,7 @@ window.buyItem = (itemId) => {
     const item = items.find(i => i.id === itemId);
     if (item && gameState.bananas >= item.price) {
         gameState.bananas -= item.price;
-        if (!gameState.ownedItems.includes(itemId)) {
-            gameState.ownedItems.push(itemId);
-        }
+        if (!gameState.ownedItems.includes(itemId)) gameState.ownedItems.push(itemId);
         saveState();
         renderShop();
     }
@@ -152,6 +174,7 @@ window.endGame = (bananasEarned, nextAction) => {
     
     if (gameState.currentUsername) {
         gameState.userTotals[gameState.currentUsername] += bananasEarned;
+        saveToGlobalDatabase(gameState.currentUsername, gameState.userTotals[gameState.currentUsername]);
     }
 
     if (window.game) {
@@ -178,13 +201,14 @@ window.endGame = (bananasEarned, nextAction) => {
 function submitScore() {
     const nameInput = document.getElementById('username-input');
     const name = nameInput.value.trim();
-    if (!name) { alert("Proszę wpisać imię!"); return; }
+    if (!name) return;
     
     gameState.currentUsername = name;
     if (!gameState.userTotals[name]) {
         gameState.userTotals[name] = gameState.bananas;
     } 
     
+    saveToGlobalDatabase(name, gameState.userTotals[name]);
     gameState.currentLevel = 1;
     saveState();
     nameInput.value = '';
@@ -201,6 +225,7 @@ function showScreen(screenId) {
     } else if (screenId === 'shop') {
         renderShop();
     } else if (screenId === 'ranking') {
+        fetchGlobalRanking();
         renderRanking();
     } else if (screenId === 'game') {
         if (!window.game) {
