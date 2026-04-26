@@ -46,7 +46,7 @@ body {
     left: 0;
     padding: 20px;
     gap: 15px;
-    overflow-y: auto;
+    overflow: hidden; /* Prevent scrolling on the whole screen */
 }
 
 /* On larger screens, keep menus contained */
@@ -66,7 +66,7 @@ body {
 
 #menu-buttons {
     display: flex;
-    flex-direction: column; /* Stack vertically for better centering */
+    flex-direction: column;
     gap: 15px;
     justify-content: center;
     align-items: center;
@@ -82,7 +82,7 @@ button {
     cursor: pointer;
     transition: transform 0.2s, background 0.2s;
     font-weight: bold;
-    width: 220px; /* Uniform width for better centering appearance */
+    width: 220px;
     color: #000;
 }
 
@@ -120,17 +120,7 @@ canvas {
     max-height: 100%;
 }
 
-#start-ranking-container {
-    width: 100%;
-    max-width: 500px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
+/* Scrollable lists without visible scrollbars */
 #shop-items-container, #scores-list {
     display: flex;
     flex-direction: column;
@@ -141,18 +131,13 @@ canvas {
     width: 100%;
     padding: 5px;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
 }
 
-/* Custom Visible Scrollbar */
 #shop-items-container::-webkit-scrollbar, 
 #scores-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-#shop-items-container::-webkit-scrollbar-thumb, 
-#scores-list::-webkit-scrollbar-thumb {
-    background: #f1c40f;
-    border-radius: 10px;
+    display: none; /* Safari and Chrome */
 }
 
 .skin-item {
@@ -219,8 +204,11 @@ canvas {
     .screen { gap: 8px; padding: 10px; }
     h1 { font-size: 18px; margin: 2px; }
     .monkey-placeholder { font-size: 40px; }
-    #menu-buttons { gap: 10px; }
-    button { padding: 6px 12px; font-size: 14px; min-width: 100px; }
-    #start-ranking-container { max-width: 400px; }
-    #shop-items-container, #scores-list { max-height: 30vh; }
+    #menu-buttons { 
+        flex-direction: row; /* Horizontal in landscape to save height */
+        gap: 10px; 
+    }
+    button { padding: 6px 12px; font-size: 14px; width: 140px; }
+    #instructions-container { font-size: 10px; padding: 5px; margin-top: 0; }
+    #instructions-container h3 { font-size: 12px; }
 }
