@@ -5,7 +5,6 @@ export class GameScene extends Phaser.Scene {
 
     init(data) {
         this.level = data.level || 1;
-        // Device detection
         this.isMobile = !this.sys.game.device.os.desktop;
     }
 
@@ -149,7 +148,7 @@ export class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-        // Touch input zones logic
+        // Improved Touch Controls
         this.setupMobileControls();
 
         this.scoreText = this.add.text(16, 16, 'Banany: 0', { fontSize: '32px', fill: '#fff' });
@@ -164,34 +163,48 @@ export class GameScene extends Phaser.Scene {
 
         if (!this.isMobile) return;
 
-        this.input.on('pointerdown', (pointer) => {
-            const now = this.time.now;
+        // Use a persistent function to update state based on pointer position
+        const updateStateFromPointer = (pointer) => {
             const screenWidth = this.cameras.main.width;
             
-            // Double tap logic for crouching
+            // Reset horizontal
+            this.mobileState.left = false;
+            this.mobileState.right = false;
+
+            if (pointer.isDown) {
+                // Horizontal movement zones
+                if (pointer.x < screenWidth * 0.33) {
+                    this.mobileState.left = true;
+                } else if (pointer.x > screenWidth * 0.66) {
+                    this.mobileState.right = true;
+                }
+            }
+        };
+
+        this.input.on('pointerdown', (pointer) => {
+            const now = this.time.now;
+            
+            // Double tap for crouch
             if (now - this.lastTap < 300) {
                 this.mobileState.crouch = !this.mobileState.crouch;
             } else {
-                // Jump logic
+                // Single tap for jump (if in middle top area)
                 if (pointer.y < this.cameras.main.height * 0.6) {
                     this.mobileState.up = true;
                 }
             }
             this.lastTap = now;
-
-            // Horizontal movement logic
-            if (pointer.x < screenWidth * 0.33) {
-                this.mobileState.left = true;
-            } else if (pointer.x > screenWidth * 0.66) {
-                this.mobileState.right = true;
-            }
+            updateStateFromPointer(pointer);
         });
 
-        this.input.on('pointerup', (pointer) => {
-            const screenWidth = this.cameras.main.width;
+        this.input.on('pointermove', (pointer) => {
+            updateStateFromPointer(pointer);
+        });
+
+        this.input.on('pointerup', () => {
+            this.mobileState.left = false;
+            this.mobileState.right = false;
             this.mobileState.up = false;
-            if (pointer.x < screenWidth * 0.33) this.mobileState.left = false;
-            if (pointer.x > screenWidth * 0.66) this.mobileState.right = false;
         });
     }
 
@@ -231,7 +244,6 @@ export class GameScene extends Phaser.Scene {
         this.isClimbing = false;
         this.physics.overlap(this.player, this.vines, () => { this.isClimbing = true; });
 
-        // Crouching logic (Mobile or Keyboard)
         const isCrouching = this.shiftKey.isDown || this.mobileState.crouch;
         if (isCrouching && !this.isFlying && !this.isClimbing) {
             this.player.setScale(this.normalScale, this.crouchScale);
