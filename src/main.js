@@ -41,6 +41,10 @@ function saveState() {
 }
 
 function updateStartScreen() {
+    const userDisplay = document.getElementById('current-username-display');
+    if (userDisplay) {
+        userDisplay.innerText = gameState.currentUsername ? `Cześć, ${gameState.currentUsername}!` : 'Zaloguj się grając rundę!';
+    }
     const display = document.getElementById('total-bananas-display');
     if (display) display.innerText = `Twoje Banany: ${gameState.bananas}`;
     const playerCount = document.getElementById('player-count-display');
