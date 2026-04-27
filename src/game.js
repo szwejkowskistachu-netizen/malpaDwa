@@ -13,61 +13,41 @@ export class GameScene extends Phaser.Scene {
 
         const drawMonkey = (g, skin) => {
             g.clear();
-            // Body
             g.fillStyle(0x8B4513, 1);
             g.fillEllipse(16, 35, 24, 32); 
-            
-            // Skin-specific body logic
             if (skin === 'nauk') {
-                // White lab coat
                 g.fillStyle(0xFFFFFF, 1);
                 g.fillEllipse(16, 35, 26, 32);
             }
-
-            // Chest patch
             g.fillStyle(0xD2B48C, 1);
             g.fillEllipse(16, 35, 16, 24);
-
-            // Head
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(16, 18, 12);
-            
-            // Face
             g.fillStyle(0xD2B48C, 1);
             g.fillCircle(16, 20, 9);
-            
-            // Ears
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(6, 18, 4);
             g.fillCircle(26, 18, 4);
-            
-            // Eyes
             g.fillStyle(0xffffff, 1);
             g.fillCircle(13, 17, 2);
             g.fillCircle(19, 17, 2);
             g.fillStyle(0x000000, 1);
             g.fillCircle(13, 17, 1);
             g.fillCircle(19, 17, 1);
-
             if (skin === 'desek') {
-                // Green Cap
                 g.fillStyle(0x228B22, 1);
                 g.fillRect(6, 6, 20, 6);
                 g.fillRect(20, 9, 10, 2);
-                // Sunglasses
                 g.fillStyle(0x000000, 1);
                 g.fillRect(8, 15, 16, 4);
             } else if (skin === 'ballerina') {
-                // Pink Skirt
                 g.fillStyle(0xFF69B4, 1);
                 g.fillEllipse(16, 42, 32, 10);
                 g.fillStyle(0xFFB6C1, 0.5);
                 g.fillEllipse(16, 42, 36, 12);
             } else if (skin === 'nauk') {
-                // Blue Pen in pocket
                 g.fillStyle(0x0000FF, 1);
                 g.fillRect(20, 32, 2, 6);
-                // Glasses
                 g.lineStyle(1, 0x000000, 1);
                 g.strokeCircle(13, 17, 4);
                 g.strokeCircle(19, 17, 4);
@@ -176,6 +156,7 @@ export class GameScene extends Phaser.Scene {
         this.lives = 4;
         this.collectedBananas = 0;
         this.isGameOver = false;
+        // Correct versioned storage key
         const state = JSON.parse(localStorage.getItem('monkeyGame_v2')) || {};
         const currentSkin = state.currentSkin || 'default';
 
@@ -192,7 +173,7 @@ export class GameScene extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(30, 45);
         this.physics.add.collider(this.player, this.platforms);
-        if (this.level === 3) this.physics.add.overlap(this.player, this.lavaGround, this.touchLava, null, this);
+        if (this.level === 3) this.physics.add.overlap(this.player, this.ground, this.touchLava, null, this);
         this.player.setGravityY(200);
 
         this.enemies = this.physics.add.group();
