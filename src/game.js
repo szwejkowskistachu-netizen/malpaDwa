@@ -13,29 +13,65 @@ export class GameScene extends Phaser.Scene {
 
         const drawMonkey = (g, skin) => {
             g.clear();
+            // Body
             g.fillStyle(0x8B4513, 1);
             g.fillEllipse(16, 35, 24, 32); 
+            
+            // Skin-specific body logic
+            if (skin === 'nauk') {
+                // White lab coat
+                g.fillStyle(0xFFFFFF, 1);
+                g.fillEllipse(16, 35, 26, 32);
+            }
+
+            // Chest patch
             g.fillStyle(0xD2B48C, 1);
             g.fillEllipse(16, 35, 16, 24);
+
+            // Head
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(16, 18, 12);
+            
+            // Face
             g.fillStyle(0xD2B48C, 1);
             g.fillCircle(16, 20, 9);
+            
+            // Ears
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(6, 18, 4);
             g.fillCircle(26, 18, 4);
+            
+            // Eyes
             g.fillStyle(0xffffff, 1);
             g.fillCircle(13, 17, 2);
             g.fillCircle(19, 17, 2);
             g.fillStyle(0x000000, 1);
             g.fillCircle(13, 17, 1);
             g.fillCircle(19, 17, 1);
+
             if (skin === 'desek') {
+                // Green Cap
                 g.fillStyle(0x228B22, 1);
                 g.fillRect(6, 6, 20, 6);
                 g.fillRect(20, 9, 10, 2);
+                // Sunglasses
                 g.fillStyle(0x000000, 1);
                 g.fillRect(8, 15, 16, 4);
+            } else if (skin === 'ballerina') {
+                // Pink Skirt
+                g.fillStyle(0xFF69B4, 1);
+                g.fillEllipse(16, 42, 32, 10);
+                g.fillStyle(0xFFB6C1, 0.5);
+                g.fillEllipse(16, 42, 36, 12);
+            } else if (skin === 'nauk') {
+                // Blue Pen in pocket
+                g.fillStyle(0x0000FF, 1);
+                g.fillRect(20, 32, 2, 6);
+                // Glasses
+                g.lineStyle(1, 0x000000, 1);
+                g.strokeCircle(13, 17, 4);
+                g.strokeCircle(19, 17, 4);
+                g.lineBetween(13, 17, 19, 17);
             }
         };
 
@@ -43,6 +79,10 @@ export class GameScene extends Phaser.Scene {
         graphics.generateTexture('player_default', 32, 48);
         drawMonkey(graphics, 'desek');
         graphics.generateTexture('player_desek', 32, 48);
+        drawMonkey(graphics, 'ballerina');
+        graphics.generateTexture('player_ballerina', 32, 48);
+        drawMonkey(graphics, 'nauk');
+        graphics.generateTexture('player_nauk', 32, 48);
 
         let suffix = '_normal';
         if (this.level === 2) suffix = '_jungle';
@@ -58,16 +98,15 @@ export class GameScene extends Phaser.Scene {
             platformColor = 0x444444;
             groundColor = 0xFF4500;
         } else if (this.level === 4) {
-            platformColor = 0x555555; // Building gray
-            groundColor = 0x222222; // Road dark gray
+            platformColor = 0x555555;
+            groundColor = 0x222222;
         }
 
-        // Platform / Building
         graphics.clear();
         graphics.fillStyle(platformColor, 1);
         graphics.fillRect(0, 0, 200, 32);
         if (this.level === 4) {
-            graphics.fillStyle(0xffff00, 0.5); // Windows
+            graphics.fillStyle(0xffff00, 0.5); 
             for(let i=0; i<4; i++) graphics.fillRect(10 + (i*50), 10, 20, 15);
         } else {
             graphics.fillStyle(0x000000, 0.1);
@@ -75,12 +114,11 @@ export class GameScene extends Phaser.Scene {
         }
         graphics.generateTexture('platform' + suffix, 200, 32);
 
-        // Ground / Road
         graphics.clear();
         graphics.fillStyle(groundColor, 1);
         graphics.fillRect(0, 0, 800, 32);
         if (this.level === 4) {
-            graphics.fillStyle(0xffffff, 0.8); // Road lines
+            graphics.fillStyle(0xffffff, 0.8);
             for(let i=0; i<10; i++) graphics.fillRect(10 + (i*80), 14, 40, 4);
         } else if (this.level !== 3) {
             graphics.fillStyle(0x2E7D32, 1);
@@ -88,20 +126,18 @@ export class GameScene extends Phaser.Scene {
         }
         graphics.generateTexture('ground' + suffix, 800, 32);
 
-        // Banana
         graphics.clear();
         graphics.fillStyle(0xFFEB3B, 1);
         graphics.fillEllipse(10, 10, 18, 8);
         graphics.generateTexture('banana', 20, 20);
 
-        // Snake / Policeman
         graphics.clear();
         if (this.level === 4) {
-            graphics.fillStyle(0x0000FF, 1); // Blue uniform
+            graphics.fillStyle(0x0000FF, 1); 
             graphics.fillCircle(20, 10, 10);
-            graphics.fillStyle(0x000000, 1); // Hat
+            graphics.fillStyle(0x000000, 1); 
             graphics.fillRect(10, 0, 20, 5);
-            graphics.fillStyle(0xffcc99, 1); // Face
+            graphics.fillStyle(0xffcc99, 1); 
             graphics.fillCircle(20, 12, 6);
         } else {
             graphics.fillStyle(0x4CAF50, 1);
@@ -113,10 +149,9 @@ export class GameScene extends Phaser.Scene {
         }
         graphics.generateTexture('enemy', 44, 20);
 
-        // Vine / Rope
         graphics.clear();
         if (this.level === 4) {
-            graphics.fillStyle(0xCCCCCC, 1); // Gray rope
+            graphics.fillStyle(0xCCCCCC, 1); 
             graphics.fillRect(9, 0, 2, 100);
         } else {
             graphics.fillStyle(0x5D4037, 1);
@@ -129,7 +164,6 @@ export class GameScene extends Phaser.Scene {
         }
         graphics.generateTexture('climbable', 20, 100);
 
-        // Jetpack
         graphics.clear();
         graphics.fillStyle(0x2196F3, 1);
         graphics.fillRect(0, 0, 20, 30);
@@ -142,16 +176,15 @@ export class GameScene extends Phaser.Scene {
         this.lives = 4;
         this.collectedBananas = 0;
         this.isGameOver = false;
-        const state = JSON.parse(localStorage.getItem('monkeyGame')) || {};
+        const state = JSON.parse(localStorage.getItem('monkeyGame_v2')) || {};
         const currentSkin = state.currentSkin || 'default';
 
         if (this.level === 2) this.cameras.main.setBackgroundColor('#1a2f1a');
         else if (this.level === 3) this.cameras.main.setBackgroundColor('#2f1a1a');
-        else if (this.level === 4) this.cameras.main.setBackgroundColor('#001122'); // Night City
+        else if (this.level === 4) this.cameras.main.setBackgroundColor('#001122');
         else this.cameras.main.setBackgroundColor('#0d1b2a');
 
         this.generateMap();
-        
         this.normalScale = 0.8;
         this.crouchScale = 0.4;
         this.player = this.physics.add.sprite(100, 400, 'player_' + currentSkin).setScale(this.normalScale);
@@ -159,16 +192,11 @@ export class GameScene extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(30, 45);
         this.physics.add.collider(this.player, this.platforms);
-        
-        if (this.level === 3) {
-            this.physics.add.overlap(this.player, this.lavaGround, this.touchLava, null, this);
-        }
-
+        if (this.level === 3) this.physics.add.overlap(this.player, this.lavaGround, this.touchLava, null, this);
         this.player.setGravityY(200);
 
         this.enemies = this.physics.add.group();
         this.physics.add.collider(this.enemies, this.platforms);
-        
         if (this.level !== 3) {
             const numEnemies = this.level === 4 ? 2 : (1 + Math.floor(this.level / 2));
             for (let i = 0; i < numEnemies; i++) {
@@ -243,7 +271,6 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 2) suffix = '_jungle';
         else if (this.level === 3) suffix = '_lava';
         else if (this.level === 4) suffix = '_city';
-        
         if (this.level === 3) {
             this.lavaGround = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
             this.platformArray.push(this.platforms.create(100, 450, 'platform' + suffix).refreshBody());
@@ -251,7 +278,6 @@ export class GameScene extends Phaser.Scene {
             this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
             this.platformArray.push(this.ground);
         }
-
         let lastY = 500;
         const numPlatforms = this.level === 3 ? 10 : 8;
         for (let i = 0; i < numPlatforms; i++) {
@@ -323,7 +349,7 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    touchLava(player, lava) {
+    touchLava(p, l) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
         this.player.setPosition(100, 350); 
@@ -332,7 +358,7 @@ export class GameScene extends Phaser.Scene {
         if (this.lives <= 0) this.gameOver(false);
     }
 
-    touchEnemy(player, enemy) {
+    touchEnemy(p, e) {
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
         this.player.setPosition(100, 350);
@@ -340,11 +366,11 @@ export class GameScene extends Phaser.Scene {
         if (this.lives <= 0) this.gameOver(false);
     }
 
-    collectBanana(player, banana) {
+    collectBanana(p, b) {
         this.tweens.add({
-            targets: banana, scaleX: 0, scaleY: 0, duration: 200,
+            targets: b, scaleX: 0, scaleY: 0, duration: 200,
             onComplete: () => {
-                banana.disableBody(true, true);
+                b.disableBody(true, true);
                 if (this.bananas.countActive(true) === 0) this.gameOver(true);
             }
         });

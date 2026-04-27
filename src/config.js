@@ -25,5 +25,7 @@ export const items = [
 
 export const skins = [
     { id: 'default', name: 'Zwykła Małpa', price: 0 },
-    { id: 'desek', name: 'Małpa DESEK', price: 5000 }
+    { id: 'desek', name: 'Małpa DESEK', price: 5000 },
+    { id: 'ballerina', name: 'Małpa BALLERINA', price: 7000 },
+    { id: 'nauk', name: 'Małpa NAUK', price: 9000 }
 ];
