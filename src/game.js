@@ -219,17 +219,17 @@ export class GameScene extends Phaser.Scene {
         this.levelText = this.add.text(784, 16, 'Poziom ' + this.level, { fontSize: '24px', fill: '#2ecc71', stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0);
         this.timerText = this.add.text(400, 16, '', { fontSize: '28px', fill: '#3498db', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5, 0);
         
-        // Emote Text
         this.emoteText = this.add.text(0, 0, '', { fontSize: '28px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
         this.emoteText.setVisible(false);
 
         this.isActuallyCrouching = false;
+        this.lastSpacePress = 0;
     }
 
     setupMobileControls() {
         this.mobileState = { left: false, right: false, up: false, down: false, crouch: false };
-        this.lastTap = 0;
         this.lastTapTime = 0;
+        this.lastMiddleTapTime = 0;
         if (!this.isMobile) return;
         const updateStateFromPointer = (pointer) => {
             if (!pointer.isDown) return;
@@ -240,9 +240,11 @@ export class GameScene extends Phaser.Scene {
             this.mobileState.up = pointer.y < screenHeight * 0.4;
             this.mobileState.down = pointer.y > screenHeight * 0.7;
             
-            // Emote trigger for mobile: Triple tap or tap middle
             if (pointer.x > screenWidth * 0.33 && pointer.x < screenWidth * 0.66 && pointer.y > screenHeight * 0.4 && pointer.y < screenHeight * 0.7) {
-                this.triggerEmote();
+                const now = this.time.now;
+                if (now - this.lastMiddleTapTime < 300) this.triggerEmote('sigma');
+                else this.triggerEmote('67');
+                this.lastMiddleTapTime = now;
             }
         };
         this.input.on('pointerdown', (p) => {
@@ -257,10 +259,15 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    triggerEmote() {
+    triggerEmote(type) {
         let emote = null;
-        if (this.ownedItems.includes('emote_67')) emote = '67';
-        else if (this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
+        if (type === 'sigma' && this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
+        else if (type === '67' && this.ownedItems.includes('emote_67')) emote = '67';
+        else if (!type) {
+            // Default behavior if type is not specified (from old logic)
+            if (this.ownedItems.includes('emote_67')) emote = '67';
+            else if (this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
+        }
 
         if (emote && !this.emoteText.visible) {
             this.emoteText.setText(emote);
@@ -301,13 +308,18 @@ export class GameScene extends Phaser.Scene {
     update() {
         if (this.isGameOver) return;
         
-        // Emote position
         if (this.emoteText.visible) {
             this.emoteText.setPosition(this.player.x, this.player.y - 60);
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-            this.triggerEmote();
+            const now = this.time.now;
+            if (now - this.lastSpacePress < 300) {
+                this.triggerEmote('sigma');
+            } else {
+                this.triggerEmote('67');
+            }
+            this.lastSpacePress = now;
         }
 
         this.isClimbing = false;
