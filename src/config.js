@@ -20,7 +20,9 @@ export const config = {
 };
 
 export const items = [
-    { id: 'jetpack', name: 'Plecak Odrzutowy', price: 2500 }
+    { id: 'jetpack', name: 'Plecak Odrzutowy', price: 2500 },
+    { id: 'emote_sigma', name: 'Emotka: SIGMA (Spacja)', price: 2000 },
+    { id: 'emote_67', name: 'Emotka: 67 (Spacja)', price: 2500 }
 ];
 
 export const skins = [

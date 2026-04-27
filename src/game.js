@@ -156,9 +156,9 @@ export class GameScene extends Phaser.Scene {
         this.lives = 4;
         this.collectedBananas = 0;
         this.isGameOver = false;
-        // Correct versioned storage key
         const state = JSON.parse(localStorage.getItem('monkeyGame_v2')) || {};
         const currentSkin = state.currentSkin || 'default';
+        this.ownedItems = state.ownedItems || [];
 
         if (this.level === 2) this.cameras.main.setBackgroundColor('#1a2f1a');
         else if (this.level === 3) this.cameras.main.setBackgroundColor('#2f1a1a');
@@ -204,24 +204,32 @@ export class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.bananas, this.collectBanana, null, this);
 
         this.isFlying = false;
-        if (state.ownedItems && state.ownedItems.includes('jetpack')) this.activateJetpack(25);
+        if (this.ownedItems.includes('jetpack')) this.activateJetpack(25);
         this.isClimbing = false;
         this.physics.add.overlap(this.player, this.vines, () => { this.isClimbing = true; }, null, this);
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
         this.setupMobileControls();
 
         this.scoreText = this.add.text(16, 16, '🍌 0', { fontSize: '32px', fill: '#f1c40f', stroke: '#000', strokeThickness: 4 });
         this.livesText = this.add.text(16, 55, '❤️ 4', { fontSize: '32px', fill: '#e74c3c', stroke: '#000', strokeThickness: 4 });
         this.levelText = this.add.text(784, 16, 'Poziom ' + this.level, { fontSize: '24px', fill: '#2ecc71', stroke: '#000', strokeThickness: 3 }).setOrigin(1, 0);
         this.timerText = this.add.text(400, 16, '', { fontSize: '28px', fill: '#3498db', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5, 0);
+        
+        // Emote Text
+        this.emoteText = this.add.text(0, 0, '', { fontSize: '28px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+        this.emoteText.setVisible(false);
+
         this.isActuallyCrouching = false;
     }
 
     setupMobileControls() {
         this.mobileState = { left: false, right: false, up: false, down: false, crouch: false };
         this.lastTap = 0;
+        this.lastTapTime = 0;
         if (!this.isMobile) return;
         const updateStateFromPointer = (pointer) => {
             if (!pointer.isDown) return;
@@ -231,17 +239,36 @@ export class GameScene extends Phaser.Scene {
             this.mobileState.right = pointer.x > screenWidth * 0.66;
             this.mobileState.up = pointer.y < screenHeight * 0.4;
             this.mobileState.down = pointer.y > screenHeight * 0.7;
+            
+            // Emote trigger for mobile: Triple tap or tap middle
+            if (pointer.x > screenWidth * 0.33 && pointer.x < screenWidth * 0.66 && pointer.y > screenHeight * 0.4 && pointer.y < screenHeight * 0.7) {
+                this.triggerEmote();
+            }
         };
         this.input.on('pointerdown', (p) => {
             const now = this.time.now;
-            if (now - this.lastTap < 300) this.mobileState.crouch = !this.mobileState.crouch;
-            this.lastTap = now;
+            if (now - this.lastTapTime < 300) this.mobileState.crouch = !this.mobileState.crouch;
+            this.lastTapTime = now;
             updateStateFromPointer(p);
         });
         this.input.on('pointermove', updateStateFromPointer);
         this.input.on('pointerup', () => {
             this.mobileState.left = this.mobileState.right = this.mobileState.up = this.mobileState.down = false;
         });
+    }
+
+    triggerEmote() {
+        let emote = null;
+        if (this.ownedItems.includes('emote_67')) emote = '67';
+        else if (this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
+
+        if (emote && !this.emoteText.visible) {
+            this.emoteText.setText(emote);
+            this.emoteText.setVisible(true);
+            this.time.delayedCall(2000, () => {
+                this.emoteText.setVisible(false);
+            });
+        }
     }
 
     generateMap() {
@@ -273,6 +300,16 @@ export class GameScene extends Phaser.Scene {
 
     update() {
         if (this.isGameOver) return;
+        
+        // Emote position
+        if (this.emoteText.visible) {
+            this.emoteText.setPosition(this.player.x, this.player.y - 60);
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+            this.triggerEmote();
+        }
+
         this.isClimbing = false;
         this.physics.overlap(this.player, this.vines, () => { this.isClimbing = true; });
         const shouldCrouch = (this.shiftKey.isDown || this.mobileState.crouch) && !this.isFlying && !this.isClimbing;
