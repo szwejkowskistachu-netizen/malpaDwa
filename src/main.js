@@ -8,10 +8,12 @@ const screens = {
     shop: document.getElementById('shop-screen'),
     game: document.getElementById('game-screen'),
     ranking: document.getElementById('ranking-screen'),
-    nameEntry: document.getElementById('name-entry-screen')
+    nameEntry: document.getElementById('name-entry-screen'),
+    friends: document.getElementById('friends-screen'),
+    friendsList: document.getElementById('friends-list-screen'),
+    addFriend: document.getElementById('add-friend-screen')
 };
 
-// Clean default state
 const defaultState = {
     bananas: 100,
     ownedItems: [],
@@ -20,16 +22,16 @@ const defaultState = {
     winsCount: 0,
     currentLevel: 1,
     userTotals: {},
-    currentUsername: localStorage.getItem('monkeyGame_user_v2') || null
+    currentUsername: localStorage.getItem('monkeyGame_user_v2') || null,
+    friends: [], // Accepted friends names
+    invites: [] // Pending invites { from, to }
 };
 
-// Use a new versioned key to force a clean start and remove any saved bots
 const STORAGE_KEY = 'monkeyGame_v2';
 let gameState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState;
 gameState = { ...defaultState, ...gameState };
 
 let currentRunScore = 0;
-
 const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
 
 function saveState() {
@@ -54,6 +56,92 @@ function updateStartScreen() {
     }
 }
 
+// --- GLOBAL SYNC LOGIC ---
+
+async function syncSocialData() {
+    if (!DATABASE_URL) return;
+    try {
+        const response = await fetch(DATABASE_URL + '?action=getSocial');
+        const data = await response.json();
+        // data expected: { users: [], invites: [], friends: [] }
+        if (data.users) {
+            data.users.forEach(u => { if(!botNames.includes(u.name)) gameState.userTotals[u.name] = u.bananas; });
+        }
+        if (gameState.currentUsername) {
+            gameState.invites = data.invites.filter(i => i.to === gameState.currentUsername && i.status === 'pending');
+            gameState.friends = data.friends.filter(f => f.user1 === gameState.currentUsername || f.user2 === gameState.currentUsername).map(f => f.user1 === gameState.currentUsername ? f.user2 : f.user1);
+        }
+        renderRanking();
+    } catch (e) { console.error("Sync error:", e); }
+}
+
+async function sendFriendInvite(targetName) {
+    if (!DATABASE_URL || !gameState.currentUsername) return;
+    if (targetName === gameState.currentUsername) return alert("Nie możesz zaprosić samego siebie!");
+    try {
+        await fetch(DATABASE_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: 'invite', from: gameState.currentUsername, to: targetName })
+        });
+        alert("Zaproszenie wysłane!");
+        showScreen('friends');
+    } catch (e) { console.error(e); }
+}
+
+async function respondToInvite(fromName, status) {
+    try {
+        await fetch(DATABASE_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: 'respond', from: fromName, to: gameState.currentUsername, status: status })
+        });
+        syncSocialData();
+        renderFriendsMenu();
+    } catch (e) { console.error(e); }
+}
+
+// --- UI RENDERING ---
+
+function renderFriendsMenu() {
+    const notifyContainer = document.getElementById('friends-notifications');
+    notifyContainer.innerHTML = '';
+    
+    if (gameState.invites.length > 0) {
+        gameState.invites.forEach(inv => {
+            const div = document.createElement('div');
+            div.className = 'skin-item';
+            div.innerHTML = `
+                <span>${inv.from} zaprasza Cię!</span>
+                <div>
+                    <button onclick="window.handleInvite('${inv.from}', 'accepted')" style="min-width: 80px; background: #2ecc71;">OK</button>
+                    <button onclick="window.handleInvite('${inv.from}', 'rejected')" style="min-width: 80px; background: #e74c3c;">NIE</button>
+                </div>
+            `;
+            notifyContainer.appendChild(div);
+        });
+    } else {
+        notifyContainer.innerHTML = '<p>Brak nowych zaproszeń</p>';
+    }
+}
+
+window.handleInvite = (from, status) => respondToInvite(from, status);
+
+function renderFriendsList() {
+    const container = document.getElementById('friends-list-container');
+    container.innerHTML = '';
+    if (gameState.friends.length === 0) {
+        container.innerHTML = '<p>Nie masz jeszcze znajomych.</p>';
+    } else {
+        gameState.friends.forEach(name => {
+            const div = document.createElement('div');
+            div.className = 'skin-item';
+            div.innerHTML = `<span>${name}</span> <span style="color: #2ecc71;">ONLINE</span>`;
+            container.appendChild(div);
+        });
+    }
+}
+
 async function fetchGlobalRanking() {
     if (!DATABASE_URL) return;
     try {
@@ -62,7 +150,6 @@ async function fetchGlobalRanking() {
         data.forEach(entry => {
             const name = entry[0];
             const total = parseInt(entry[1]);
-            // Ignore any names that match the bots list
             if (name && !isNaN(total) && !botNames.includes(name)) {
                 if (!gameState.userTotals[name] || total > gameState.userTotals[name]) {
                     gameState.userTotals[name] = total;
@@ -70,9 +157,7 @@ async function fetchGlobalRanking() {
             }
         });
         renderRanking();
-    } catch (e) {
-        console.error("Database fetch error:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 async function saveToGlobalDatabase(name, total) {
@@ -81,11 +166,9 @@ async function saveToGlobalDatabase(name, total) {
         await fetch(DATABASE_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ name: name, bananas: total })
+            body: JSON.stringify({ action: 'score', name: name, bananas: total })
         });
-    } catch (e) {
-        console.error("Database save error:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 function renderShop() {
@@ -130,19 +213,14 @@ function renderRanking() {
     const scoresList = document.getElementById('scores-list');
     if (!scoresList) return;
     scoresList.innerHTML = '';
-    
-    // Filter out bots again just to be absolutely sure
     const rankingArray = Object.entries(gameState.userTotals)
         .filter(([name]) => !botNames.includes(name))
         .map(([name, total]) => ({ name, total }));
-
     const sorted = rankingArray.sort((a, b) => b.total - a.total).slice(0, 10);
-    
     if (sorted.length === 0) {
         scoresList.innerHTML = '<p style="color: #f1c40f;">Ranking jest pusty. Bądź pierwszy!</p>';
         return;
     }
-
     sorted.forEach((entry, index) => {
         const div = document.createElement('div');
         div.className = 'skin-item';
@@ -182,17 +260,14 @@ window.buyItem = (itemId) => {
 window.endGame = (bananasEarned, nextAction) => {
     currentRunScore = bananasEarned;
     gameState.bananas += bananasEarned;
-    
     if (gameState.currentUsername) {
         gameState.userTotals[gameState.currentUsername] += bananasEarned;
         saveToGlobalDatabase(gameState.currentUsername, gameState.userTotals[gameState.currentUsername]);
     }
-
     if (window.game) {
         window.game.destroy(true);
         window.game = null;
     }
-
     if (nextAction === 'next_level') {
         gameState.currentLevel++;
         saveState();
@@ -213,12 +288,8 @@ function submitScore() {
     const nameInput = document.getElementById('username-input');
     const name = nameInput.value.trim();
     if (!name) return;
-    
     gameState.currentUsername = name;
-    if (!gameState.userTotals[name]) {
-        gameState.userTotals[name] = gameState.bananas;
-    } 
-    
+    if (!gameState.userTotals[name]) gameState.userTotals[name] = gameState.bananas;
     saveToGlobalDatabase(name, gameState.userTotals[name]);
     gameState.currentLevel = 1;
     saveState();
@@ -233,11 +304,17 @@ function showScreen(screenId) {
 
     if (screenId === 'start') {
         updateStartScreen();
+        syncSocialData();
     } else if (screenId === 'shop') {
         renderShop();
     } else if (screenId === 'ranking') {
         fetchGlobalRanking();
         renderRanking();
+    } else if (screenId === 'friends') {
+        renderFriendsMenu();
+        syncSocialData();
+    } else if (screenId === 'friendsList') {
+        renderFriendsList();
     } else if (screenId === 'game') {
         if (!window.game) {
             const gameConfig = { ...config };
@@ -257,17 +334,23 @@ document.getElementById('play-btn').addEventListener('click', () => {
     saveState();
     showScreen('game');
 });
-document.getElementById('shop-btn').addEventListener('click', () => {
-    showScreen('shop');
-});
-document.getElementById('ranking-btn').addEventListener('click', () => {
-    showScreen('ranking');
+document.getElementById('shop-btn').addEventListener('click', () => showScreen('shop'));
+document.getElementById('ranking-btn').addEventListener('click', () => showScreen('ranking'));
+document.getElementById('friends-btn').addEventListener('click', () => showScreen('friends'));
+document.getElementById('view-friends-btn').addEventListener('click', () => showScreen('friendsList'));
+document.getElementById('add-friend-menu-btn').addEventListener('click', () => showScreen('addFriend'));
+document.getElementById('search-friend-btn').addEventListener('click', () => {
+    const name = document.getElementById('friend-search-input').value.trim();
+    if (name) sendFriendInvite(name);
 });
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
+
 document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        showScreen('start');
-    });
+    btn.addEventListener('click', () => showScreen('start'));
+});
+document.querySelectorAll('.friends-back-btn').forEach(btn => {
+    btn.addEventListener('click', () => showScreen('friends'));
 });
 
 updateStartScreen();
+syncSocialData();

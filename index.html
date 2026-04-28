@@ -33,11 +33,40 @@
                 <p>Zbieraj banany, unikaj wrogów i dotrzyj do końca!</p>
             </div>
         </div>
+
+        <!-- Friends Main Screen -->
+        <div id="friends-screen" class="screen hidden">
+            <h1>Znajomi</h1>
+            <div id="friends-notifications" style="width: 100%; max-width: 400px;"></div>
+            <div id="friends-menu-buttons">
+                <button id="view-friends-btn">ZOBACZ ZNAJOMYCH</button>
+                <button id="add-friend-menu-btn">DODAJ ZNAJOMEGO</button>
+            </div>
+            <button class="back-btn">Wróć</button>
+        </div>
+
+        <!-- List Friends Screen -->
+        <div id="friends-list-screen" class="screen hidden">
+            <h1>Twoi Znajomi</h1>
+            <div id="friends-list-container" class="scroll-list"></div>
+            <button class="friends-back-btn">Wróć</button>
+        </div>
+
+        <!-- Add Friend Screen -->
+        <div id="add-friend-screen" class="screen hidden">
+            <h1>Dodaj Znajomego</h1>
+            <input type="text" id="friend-search-input" placeholder="Nazwa gracza">
+            <button id="search-friend-btn">SZUKAJ I ZAPROŚ</button>
+            <div id="search-result-display"></div>
+            <button class="friends-back-btn">Wróć</button>
+        </div>
+
         <div id="ranking-screen" class="screen hidden">
             <h1>Ranking</h1>
             <div id="scores-list"></div>
             <button class="back-btn">Wróć</button>
         </div>
+
         <div id="shop-screen" class="screen hidden">
             <h1>Sklep</h1>
             <div id="banana-count">Twoje Banany: 0</div>
@@ -53,12 +82,14 @@
             </div>
             <button class="back-btn">Wróć</button>
         </div>
+
         <div id="name-entry-screen" class="screen hidden">
             <h1>Twój Wynik!</h1>
             <div id="final-score-display"></div>
             <input type="text" id="username-input" placeholder="Wpisz swoje imię" maxlength="15">
             <button id="submit-score-btn">ZAPISZ I WYJDŹ</button>
         </div>
+
         <div id="game-screen" class="screen hidden">
             <div id="game-container"></div>
         </div>
