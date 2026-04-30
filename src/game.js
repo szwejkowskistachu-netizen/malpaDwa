@@ -189,6 +189,19 @@ export class GameScene extends Phaser.Scene {
             graphics.fillStyle(0x000000, 1);
             graphics.fillCircle(18, 11, 1);
             graphics.fillCircle(22, 11, 1);
+            graphics.generateTexture('enemy', 44, 20);
+        } else if (this.level === 3) {
+            // Lava Gorilla
+            graphics.fillStyle(0x330000, 1); // Dark base
+            graphics.fillEllipse(25, 25, 45, 45); // Body
+            graphics.fillStyle(0xff4500, 1); // Lava orange
+            graphics.fillCircle(25, 15, 12); // Head
+            graphics.fillStyle(0xffa500, 1);
+            graphics.fillCircle(20, 12, 2); // Eyes
+            graphics.fillCircle(30, 12, 2);
+            graphics.fillStyle(0xff0000, 0.5);
+            for(let i=0; i<10; i++) graphics.fillCircle(Math.random()*50, Math.random()*50, 3); // Lava spots
+            graphics.generateTexture('enemy', 50, 50);
         } else {
             // Realistic Snake
             graphics.fillStyle(0x4CAF50, 1);
@@ -207,8 +220,8 @@ export class GameScene extends Phaser.Scene {
             // Tongue
             graphics.fillStyle(0xff0000, 1);
             graphics.fillRect(42, 10, 6, 1);
+            graphics.generateTexture('enemy', 44, 20);
         }
-        graphics.generateTexture('enemy', 44, 20);
 
         graphics.clear();
         if (this.level === 4) {
@@ -281,16 +294,25 @@ export class GameScene extends Phaser.Scene {
 
         this.enemies = this.physics.add.group();
         this.physics.add.collider(this.enemies, this.platforms);
-        if (this.level !== 3) {
-            const numEnemies = this.level === 4 ? 2 : (1 + Math.floor(this.level / 2));
-            for (let i = 0; i < numEnemies; i++) {
-                const enemy = this.enemies.create(Phaser.Math.Between(200, 700), Phaser.Math.Between(100, 500), 'enemy');
-                enemy.setCollideWorldBounds(true);
-                enemy.setGravityY(0); 
-                this.physics.add.overlap(this.player, enemy, this.touchEnemy, null, this);
-                const speed = 80 + (this.level * 10);
-                enemy.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
-                enemy.setBounce(1);
+        
+        let numEnemies = 0;
+        if (this.level === 4) numEnemies = 2;
+        else if (this.level === 3) numEnemies = 1; // 1 Lava Gorilla
+        else numEnemies = (1 + Math.floor(this.level / 2));
+
+        for (let i = 0; i < numEnemies; i++) {
+            const enemy = this.enemies.create(Phaser.Math.Between(200, 700), Phaser.Math.Between(100, 500), 'enemy');
+            enemy.setCollideWorldBounds(true);
+            enemy.setGravityY(0); 
+            this.physics.add.overlap(this.player, enemy, this.touchEnemy, null, this);
+            const speed = 80 + (this.level * 10);
+            enemy.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
+            enemy.setBounce(1);
+            
+            if (this.level === 3) {
+                // Gorilla specific properties
+                enemy.setScale(1.5);
+                enemy.setTint(0xff4500);
             }
         }
 
