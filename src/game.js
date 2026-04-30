@@ -18,6 +18,12 @@ export class GameScene extends Phaser.Scene {
             if (skin === 'nauk') {
                 g.fillStyle(0xFFFFFF, 1);
                 g.fillEllipse(16, 35, 26, 32);
+            } else if (skin === 'hiper_malpa') {
+                // Glow effect for Hiper Malpa
+                g.lineStyle(3, 0x00ffff, 0.8);
+                g.strokeCircle(16, 24, 22);
+                g.lineStyle(2, 0xffffff, 0.5);
+                g.strokeCircle(16, 24, 26);
             }
             g.fillStyle(0xD2B48C, 1);
             g.fillEllipse(16, 35, 16, 24);
@@ -52,6 +58,11 @@ export class GameScene extends Phaser.Scene {
                 g.strokeCircle(13, 17, 4);
                 g.strokeCircle(19, 17, 4);
                 g.lineBetween(13, 17, 19, 17);
+            } else if (skin === 'hiper_malpa') {
+                // Cyan energy eyes
+                g.fillStyle(0x00ffff, 1);
+                g.fillCircle(13, 17, 3);
+                g.fillCircle(19, 17, 3);
             }
         };
 
@@ -63,6 +74,16 @@ export class GameScene extends Phaser.Scene {
         graphics.generateTexture('player_ballerina', 32, 48);
         drawMonkey(graphics, 'nauk');
         graphics.generateTexture('player_nauk', 32, 48);
+        drawMonkey(graphics, 'hiper_malpa');
+        graphics.generateTexture('player_hiper_malpa', 32, 48);
+
+        // Bat/Pałka texture
+        graphics.clear();
+        graphics.fillStyle(0x8D6E63, 1);
+        graphics.fillRect(2, 0, 4, 30); // handle
+        graphics.fillStyle(0xA1887F, 1);
+        graphics.fillEllipse(4, 5, 8, 15); // club head
+        graphics.generateTexture('bat', 8, 30);
 
         let suffix = '_normal';
         if (this.level === 2) suffix = '_jungle';
@@ -157,7 +178,7 @@ export class GameScene extends Phaser.Scene {
         this.collectedBananas = 0;
         this.isGameOver = false;
         const state = JSON.parse(localStorage.getItem('monkeyGame_v2')) || {};
-        const currentSkin = state.currentSkin || 'default';
+        this.currentSkin = state.currentSkin || 'default';
         this.ownedItems = state.ownedItems || [];
 
         if (this.level === 2) this.cameras.main.setBackgroundColor('#1a2f1a');
@@ -166,15 +187,37 @@ export class GameScene extends Phaser.Scene {
         else this.cameras.main.setBackgroundColor('#0d1b2a');
 
         this.generateMap();
+        
         this.normalScale = 0.8;
         this.crouchScale = 0.4;
-        this.player = this.physics.add.sprite(100, 400, 'player_' + currentSkin).setScale(this.normalScale);
+        this.player = this.physics.add.sprite(100, 400, 'player_' + this.currentSkin).setScale(this.normalScale);
         this.player.setBounce(0.1);
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(30, 45);
         this.physics.add.collider(this.player, this.platforms);
-        if (this.level === 3) this.physics.add.overlap(this.player, this.ground, this.touchLava, null, this);
+        if (this.level === 3) {
+            this.physics.add.overlap(this.player, this.ground, this.touchLava, null, this);
+        }
         this.player.setGravityY(200);
+
+        // Hiper Malpa Logic
+        this.hasPowerStrike = (this.currentSkin === 'hiper_malpa');
+        this.isStriking = false;
+        if (this.hasPowerStrike) {
+            this.bat = this.physics.add.image(0, 0, 'bat').setOrigin(0.5, 1).setVisible(false);
+            this.bat.body.setAllowGravity(false);
+            
+            // Energy particles for Hiper Malpa
+            this.energyParticles = this.add.particles(0, 0, 'banana', {
+                scale: { start: 0.2, end: 0 },
+                alpha: { start: 0.6, end: 0 },
+                tint: 0x00ffff,
+                speed: 50,
+                lifespan: 600,
+                blendMode: 'ADD',
+                follow: this.player
+            });
+        }
 
         this.enemies = this.physics.add.group();
         this.physics.add.collider(this.enemies, this.platforms);
@@ -211,6 +254,7 @@ export class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.eKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         
         this.setupMobileControls();
 
@@ -221,6 +265,11 @@ export class GameScene extends Phaser.Scene {
         
         this.emoteText = this.add.text(0, 0, '', { fontSize: '28px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
         this.emoteText.setVisible(false);
+
+        // Hiper Malpa UI
+        if (this.hasPowerStrike) {
+            this.strikeText = this.add.text(400, 50, 'PAŁKA: GOTOWA (E)', { fontSize: '24px', fill: '#00ffff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5, 0);
+        }
 
         this.isActuallyCrouching = false;
         this.lastSpacePress = 0;
@@ -240,10 +289,13 @@ export class GameScene extends Phaser.Scene {
             this.mobileState.up = pointer.y < screenHeight * 0.4;
             this.mobileState.down = pointer.y > screenHeight * 0.7;
             
+            // Middle area trigger
             if (pointer.x > screenWidth * 0.33 && pointer.x < screenWidth * 0.66 && pointer.y > screenHeight * 0.4 && pointer.y < screenHeight * 0.7) {
                 const now = this.time.now;
-                if (now - this.lastMiddleTapTime < 300) this.triggerEmote('sigma');
-                else this.triggerEmote('67');
+                if (now - this.lastMiddleTapTime < 300) {
+                    if (this.hasPowerStrike) this.triggerStrike();
+                    else this.triggerEmote('sigma');
+                } else this.triggerEmote('67');
                 this.lastMiddleTapTime = now;
             }
         };
@@ -259,22 +311,84 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
+    triggerStrike() {
+        if (!this.hasPowerStrike || this.isStriking) return;
+        
+        this.isStriking = true;
+        this.bat.setVisible(true);
+        this.bat.setPosition(this.player.x, this.player.y);
+        this.bat.angle = -90;
+        this.bat.body.enable = true;
+
+        this.tweens.add({
+            targets: this.bat,
+            angle: 90,
+            duration: 250,
+            onUpdate: () => {
+                this.bat.setPosition(this.player.x, this.player.y);
+                // Sync physics body position (Arcade physics)
+                this.bat.body.x = this.bat.x - this.bat.body.width / 2;
+                this.bat.body.y = this.bat.y - this.bat.body.height / 2;
+                
+                // Check collision during swing
+                this.physics.overlap(this.bat, this.enemies, (bat, enemy) => {
+                    this.killEnemy(enemy);
+                    // Flash effect on hit
+                    this.cameras.main.flash(100, 0, 255, 255);
+                });
+            },
+            onComplete: () => {
+                this.bat.setVisible(false);
+                this.bat.body.enable = false;
+                this.isStriking = false;
+                this.hasPowerStrike = false;
+                if (this.energyParticles) this.energyParticles.stop();
+                if (this.strikeText) this.strikeText.setText('PAŁKA: ZUŻYTA');
+            }
+        });
+    }
+
+    killEnemy(enemy) {
+        if (!enemy.active) return;
+        
+        // Create death explosion particles
+        const x = enemy.x;
+        const y = enemy.y;
+        const deathExplosion = this.add.particles(x, y, 'banana', {
+            speed: { min: 100, max: 200 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.4, end: 0 },
+            alpha: { start: 1, end: 0 },
+            tint: 0x00ffff,
+            lifespan: 500,
+            gravityY: 200,
+            quantity: 20
+        });
+        deathExplosion.explode();
+        this.time.delayedCall(1000, () => deathExplosion.destroy());
+
+        enemy.disableBody(true, false);
+        this.tweens.add({
+            targets: enemy,
+            alpha: 0,
+            scaleX: 2,
+            scaleY: 2,
+            angle: 180,
+            duration: 500,
+            onComplete: () => {
+                enemy.destroy();
+            }
+        });
+    }
+
     triggerEmote(type) {
         let emote = null;
         if (type === 'sigma' && this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
         else if (type === '67' && this.ownedItems.includes('emote_67')) emote = '67';
-        else if (!type) {
-            // Default behavior if type is not specified (from old logic)
-            if (this.ownedItems.includes('emote_67')) emote = '67';
-            else if (this.ownedItems.includes('emote_sigma')) emote = 'SIGMA';
-        }
-
         if (emote && !this.emoteText.visible) {
             this.emoteText.setText(emote);
             this.emoteText.setVisible(true);
-            this.time.delayedCall(2000, () => {
-                this.emoteText.setVisible(false);
-            });
+            this.time.delayedCall(2000, () => { this.emoteText.setVisible(false); });
         }
     }
 
@@ -287,14 +401,14 @@ export class GameScene extends Phaser.Scene {
         else if (this.level === 3) suffix = '_lava';
         else if (this.level === 4) suffix = '_city';
         if (this.level === 3) {
-            this.lavaGround = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
+            this.ground = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
             this.platformArray.push(this.platforms.create(100, 450, 'platform' + suffix).refreshBody());
         } else {
             this.ground = this.platforms.create(400, 568, 'ground' + suffix).setScale(2).refreshBody();
             this.platformArray.push(this.ground);
         }
         let lastY = 500;
-        const numPlatforms = this.level === 3 ? 10 : 8;
+        const numPlatforms = this.level === 3 ? 10 : 7;
         for (let i = 0; i < numPlatforms; i++) {
             let x = Phaser.Math.Between(100, 700);
             let y = Phaser.Math.Between(100, 450);
@@ -307,18 +421,14 @@ export class GameScene extends Phaser.Scene {
 
     update() {
         if (this.isGameOver) return;
-        
-        if (this.emoteText.visible) {
-            this.emoteText.setPosition(this.player.x, this.player.y - 60);
-        }
+        if (this.emoteText.visible) this.emoteText.setPosition(this.player.x, this.player.y - 60);
+
+        if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerStrike();
 
         if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
             const now = this.time.now;
-            if (now - this.lastSpacePress < 300) {
-                this.triggerEmote('sigma');
-            } else {
-                this.triggerEmote('67');
-            }
+            if (now - this.lastSpacePress < 300) this.triggerEmote('sigma');
+            else this.triggerEmote('67');
             this.lastSpacePress = now;
         }
 
@@ -389,6 +499,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     touchEnemy(p, e) {
+        if (this.isStriking) return;
         this.lives -= 1;
         this.livesText.setText('❤️ ' + this.lives);
         this.player.setPosition(100, 350);
