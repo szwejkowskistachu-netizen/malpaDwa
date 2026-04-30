@@ -374,5 +374,6 @@ document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => showScreen('start'));
 });
 
+initMusic();
 updateStartScreen();
 startMusic();
