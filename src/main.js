@@ -361,17 +361,30 @@ function showScreen(screenId) {
 
 // Event listeners
 document.getElementById('play-btn').addEventListener('click', () => {
+    startMusic();
     gameState.currentLevel = 1;
     saveState();
     showScreen('game');
 });
-document.getElementById('shop-btn').addEventListener('click', () => showScreen('shop'));
-document.getElementById('ranking-btn').addEventListener('click', () => showScreen('ranking'));
+document.getElementById('shop-btn').addEventListener('click', () => {
+    startMusic();
+    showScreen('shop');
+});
+document.getElementById('ranking-btn').addEventListener('click', () => {
+    startMusic();
+    showScreen('ranking');
+});
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
-document.getElementById('music-toggle-btn').addEventListener('click', toggleMusic);
+document.getElementById('music-toggle-btn').addEventListener('click', () => {
+    startMusic(); // Try to play if not playing
+    toggleMusic();
+});
 
 document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', () => showScreen('start'));
+    btn.addEventListener('click', () => {
+        startMusic();
+        showScreen('start');
+    });
 });
 
 initMusic();
