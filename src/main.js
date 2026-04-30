@@ -35,6 +35,7 @@ let isMusicMuted = false;
 function initMusic() {
     music = document.getElementById('menu-music');
     if (music) {
+        music.load(); // Force load the new source
         music.volume = 0.5;
         // Try to play on any user interaction
         const startOnInteraction = () => {
