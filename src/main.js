@@ -29,6 +29,39 @@ gameState = { ...defaultState, ...gameState };
 let currentRunScore = 0;
 const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
 
+const music = document.getElementById('menu-music');
+let isMusicMuted = false;
+
+function toggleMusic() {
+    isMusicMuted = !isMusicMuted;
+    if (isMusicMuted) {
+        music.pause();
+        document.getElementById('music-toggle-btn').innerText = '🔇';
+    } else {
+        music.play().catch(() => {});
+        document.getElementById('music-toggle-btn').innerText = '🔊';
+    }
+}
+
+function startMusic() {
+    if (!isMusicMuted) {
+        music.play().catch(() => {
+            // Autoplay blocked, wait for first interaction
+            const playOnInteract = () => {
+                if (!isMusicMuted) music.play();
+                document.removeEventListener('click', playOnInteract);
+                document.removeEventListener('keydown', playOnInteract);
+            };
+            document.addEventListener('click', playOnInteract);
+            document.addEventListener('keydown', playOnInteract);
+        });
+    }
+}
+
+function stopMusic() {
+    music.pause();
+}
+
 function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
     if (gameState.currentUsername) {
@@ -296,12 +329,14 @@ function showScreen(screenId) {
 
     if (screenId === 'start') {
         updateStartScreen();
+        startMusic();
     } else if (screenId === 'shop') {
         renderShop();
     } else if (screenId === 'ranking') {
         fetchGlobalRanking();
         renderRanking();
     } else if (screenId === 'game') {
+        // Music continues playing everywhere as requested
         if (!window.game) {
             const gameConfig = { ...config };
             gameConfig.callbacks = {
@@ -323,9 +358,11 @@ document.getElementById('play-btn').addEventListener('click', () => {
 document.getElementById('shop-btn').addEventListener('click', () => showScreen('shop'));
 document.getElementById('ranking-btn').addEventListener('click', () => showScreen('ranking'));
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
+document.getElementById('music-toggle-btn').addEventListener('click', toggleMusic);
 
 document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => showScreen('start'));
 });
 
 updateStartScreen();
+startMusic();
