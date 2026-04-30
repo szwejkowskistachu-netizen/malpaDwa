@@ -13,8 +13,15 @@ export class GameScene extends Phaser.Scene {
 
         const drawMonkey = (g, skin) => {
             g.clear();
+            
+            // Shading/Shadow
+            g.fillStyle(0x000000, 0.2);
+            g.fillEllipse(18, 37, 24, 32); 
+
+            // Body
             g.fillStyle(0x8B4513, 1);
             g.fillEllipse(16, 35, 24, 32); 
+            
             if (skin === 'nauk') {
                 g.fillStyle(0xFFFFFF, 1);
                 g.fillEllipse(16, 35, 26, 32);
@@ -25,25 +32,39 @@ export class GameScene extends Phaser.Scene {
                 g.lineStyle(2, 0xffffff, 0.5);
                 g.strokeCircle(16, 24, 26);
             }
+            
+            // Belly
             g.fillStyle(0xD2B48C, 1);
-            g.fillEllipse(16, 35, 16, 24);
+            g.fillEllipse(16, 38, 14, 20);
+            
+            // Head
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(16, 18, 12);
+            
+            // Face area
             g.fillStyle(0xD2B48C, 1);
-            g.fillCircle(16, 20, 9);
+            g.fillEllipse(16, 20, 10, 8);
+            
+            // Ears
             g.fillStyle(0x8B4513, 1);
             g.fillCircle(6, 18, 4);
             g.fillCircle(26, 18, 4);
+            g.fillStyle(0xD2B48C, 1);
+            g.fillCircle(6, 18, 2);
+            g.fillCircle(26, 18, 2);
+
+            // Eyes
             g.fillStyle(0xffffff, 1);
-            g.fillCircle(13, 17, 2);
-            g.fillCircle(19, 17, 2);
+            g.fillCircle(13, 17, 2.5);
+            g.fillCircle(19, 17, 2.5);
             g.fillStyle(0x000000, 1);
-            g.fillCircle(13, 17, 1);
-            g.fillCircle(19, 17, 1);
+            g.fillCircle(13, 17, 1.2);
+            g.fillCircle(19, 17, 1.2);
+
             if (skin === 'desek') {
+                // Skateboard detail
                 g.fillStyle(0x228B22, 1);
                 g.fillRect(6, 6, 20, 6);
-                g.fillRect(20, 9, 10, 2);
                 g.fillStyle(0x000000, 1);
                 g.fillRect(8, 15, 16, 4);
             } else if (skin === 'ballerina') {
@@ -63,6 +84,9 @@ export class GameScene extends Phaser.Scene {
                 g.fillStyle(0x00ffff, 1);
                 g.fillCircle(13, 17, 3);
                 g.fillCircle(19, 17, 3);
+                g.fillStyle(0xffffff, 0.8);
+                g.fillCircle(13, 17, 1);
+                g.fillCircle(19, 17, 1);
             }
         };
 
@@ -106,47 +130,83 @@ export class GameScene extends Phaser.Scene {
         graphics.clear();
         graphics.fillStyle(platformColor, 1);
         graphics.fillRect(0, 0, 200, 32);
+        
+        // Better texture for platforms
+        graphics.fillStyle(0x000000, 0.15);
+        for(let i=0; i<10; i++) {
+            graphics.fillRect(Math.random()*180, Math.random()*28, 20, 2);
+        }
+        graphics.lineStyle(2, 0xffffff, 0.1);
+        graphics.strokeRect(0, 0, 200, 32);
+
         if (this.level === 4) {
-            graphics.fillStyle(0xffff00, 0.5); 
-            for(let i=0; i<4; i++) graphics.fillRect(10 + (i*50), 10, 20, 15);
-        } else {
-            graphics.fillStyle(0x000000, 0.1);
-            for(let i=0; i<5; i++) graphics.fillRect(0, 5 + (i*6), 200, 2);
+            graphics.fillStyle(0xffff00, 0.3); 
+            for(let i=0; i<4; i++) graphics.fillRect(10 + (i*50), 8, 30, 16);
         }
         graphics.generateTexture('platform' + suffix, 200, 32);
 
         graphics.clear();
         graphics.fillStyle(groundColor, 1);
         graphics.fillRect(0, 0, 800, 32);
+        
+        // Texture for ground
+        graphics.fillStyle(0x000000, 0.2);
+        for(let i=0; i<40; i++) {
+            graphics.fillCircle(Math.random()*800, Math.random()*32, 2);
+        }
+
         if (this.level === 4) {
-            graphics.fillStyle(0xffffff, 0.8);
+            graphics.fillStyle(0xffffff, 0.5);
             for(let i=0; i<10; i++) graphics.fillRect(10 + (i*80), 14, 40, 4);
         } else if (this.level !== 3) {
-            graphics.fillStyle(0x2E7D32, 1);
-            graphics.fillRect(0, 0, 800, 6);
+            graphics.fillStyle(0x228B22, 1);
+            graphics.fillRect(0, 0, 800, 8);
+            graphics.fillStyle(0x32CD32, 0.5);
+            for(let i=0; i<20; i++) graphics.fillRect(i*40, 0, 10, 4);
         }
         graphics.generateTexture('ground' + suffix, 800, 32);
 
         graphics.clear();
         graphics.fillStyle(0xFFEB3B, 1);
         graphics.fillEllipse(10, 10, 18, 8);
+        graphics.fillStyle(0xFDD835, 1);
+        graphics.fillEllipse(10, 12, 14, 4); // Shading
+        graphics.fillStyle(0x795548, 1);
+        graphics.fillRect(18, 8, 2, 2); // Tip
         graphics.generateTexture('banana', 20, 20);
 
         graphics.clear();
         if (this.level === 4) {
+            // Police Snake
             graphics.fillStyle(0x0000FF, 1); 
             graphics.fillCircle(20, 10, 10);
             graphics.fillStyle(0x000000, 1); 
-            graphics.fillRect(10, 0, 20, 5);
+            graphics.fillRect(10, 0, 20, 5); // Police hat
+            graphics.fillStyle(0xffffff, 1);
+            graphics.fillRect(10, 3, 20, 1); // Hat band
             graphics.fillStyle(0xffcc99, 1); 
             graphics.fillCircle(20, 12, 6);
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillCircle(18, 11, 1);
+            graphics.fillCircle(22, 11, 1);
         } else {
+            // Realistic Snake
             graphics.fillStyle(0x4CAF50, 1);
             graphics.fillEllipse(20, 10, 35, 12);
+            // Snake patterns
+            graphics.fillStyle(0x2E7D32, 1);
+            for(let i=0; i<5; i++) graphics.fillCircle(10 + (i*6), 8 + (i%2)*4, 3);
+            
+            // Snake head
+            graphics.fillStyle(0x4CAF50, 1);
+            graphics.fillCircle(35, 10, 8);
             graphics.fillStyle(0xffffff, 1);
-            graphics.fillCircle(34, 7, 3);
+            graphics.fillCircle(38, 8, 2.5);
             graphics.fillStyle(0x000000, 1);
-            graphics.fillCircle(35, 7, 1);
+            graphics.fillCircle(38.5, 8, 1);
+            // Tongue
+            graphics.fillStyle(0xff0000, 1);
+            graphics.fillRect(42, 10, 6, 1);
         }
         graphics.generateTexture('enemy', 44, 20);
 
