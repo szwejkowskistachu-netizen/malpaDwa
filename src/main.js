@@ -29,10 +29,28 @@ gameState = { ...defaultState, ...gameState };
 let currentRunScore = 0;
 const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
 
-const music = document.getElementById('menu-music');
+let music;
 let isMusicMuted = false;
 
+function initMusic() {
+    music = document.getElementById('menu-music');
+    if (music) {
+        music.volume = 0.5;
+        // Try to play on any user interaction
+        const startOnInteraction = () => {
+            if (!isMusicMuted && music.paused) {
+                music.play().catch(e => console.log("Playback failed:", e));
+            }
+            document.removeEventListener('click', startOnInteraction);
+            document.removeEventListener('touchstart', startOnInteraction);
+        };
+        document.addEventListener('click', startOnInteraction);
+        document.addEventListener('touchstart', startOnInteraction);
+    }
+}
+
 function toggleMusic() {
+    if (!music) music = document.getElementById('menu-music');
     isMusicMuted = !isMusicMuted;
     if (isMusicMuted) {
         music.pause();
@@ -44,22 +62,14 @@ function toggleMusic() {
 }
 
 function startMusic() {
-    if (!isMusicMuted) {
-        music.play().catch(() => {
-            // Autoplay blocked, wait for first interaction
-            const playOnInteract = () => {
-                if (!isMusicMuted) music.play();
-                document.removeEventListener('click', playOnInteract);
-                document.removeEventListener('keydown', playOnInteract);
-            };
-            document.addEventListener('click', playOnInteract);
-            document.addEventListener('keydown', playOnInteract);
-        });
+    if (!music) music = document.getElementById('menu-music');
+    if (music && !isMusicMuted && music.paused) {
+        music.play().catch(() => {});
     }
 }
 
 function stopMusic() {
-    music.pause();
+    // We decided to keep it playing everywhere, but keeping the function for future use
 }
 
 function saveState() {
