@@ -36,18 +36,19 @@ function initMusic() {
     music = document.getElementById('menu-music');
     if (music) {
         music.volume = 0.5;
-        // The most robust way to start audio on the web
+        // Super aggressive music start
         const startAudio = () => {
-            music.play().then(() => {
-                console.log("Music started!");
-                document.body.removeEventListener('click', startAudio);
-                document.body.removeEventListener('touchstart', startAudio);
-            }).catch(err => {
-                console.log("Music play failed:", err);
-            });
+            if (music.paused) {
+                music.play().then(() => {
+                    console.log("Music started!");
+                }).catch(err => {
+                    console.log("Music play failed:", err);
+                });
+            }
         };
-        document.body.addEventListener('click', startAudio);
-        document.body.addEventListener('touchstart', startAudio);
+        window.addEventListener('mousedown', startAudio, { once: true });
+        window.addEventListener('touchstart', startAudio, { once: true });
+        window.addEventListener('keydown', startAudio, { once: true });
     }
 }
 
