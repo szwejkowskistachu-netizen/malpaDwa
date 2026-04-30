@@ -36,16 +36,13 @@ function initMusic() {
     music = document.getElementById('menu-music');
     const overlay = document.getElementById('audio-start-overlay');
     
-    if (music && overlay) {
-        music.volume = 0.5;
-        overlay.addEventListener('click', () => {
-            music.play().then(() => {
-                overlay.style.display = 'none';
-            }).catch(err => {
-                console.log("Music play failed:", err);
-                overlay.style.display = 'none';
-            });
-        });
+    if (overlay) {
+        overlay.onclick = () => {
+            if (music) {
+                music.play().catch(err => console.log("Music play failed:", err));
+            }
+            overlay.remove();
+        };
     }
 }
 
