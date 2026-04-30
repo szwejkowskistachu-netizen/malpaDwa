@@ -35,18 +35,19 @@ let isMusicMuted = false;
 function initMusic() {
     music = document.getElementById('menu-music');
     if (music) {
-        music.load(); // Force load the new source
         music.volume = 0.5;
-        // Try to play on any user interaction
-        const startOnInteraction = () => {
-            if (!isMusicMuted && music.paused) {
-                music.play().catch(e => console.log("Playback failed:", e));
-            }
-            document.removeEventListener('click', startOnInteraction);
-            document.removeEventListener('touchstart', startOnInteraction);
+        // The most robust way to start audio on the web
+        const startAudio = () => {
+            music.play().then(() => {
+                console.log("Music started!");
+                document.body.removeEventListener('click', startAudio);
+                document.body.removeEventListener('touchstart', startAudio);
+            }).catch(err => {
+                console.log("Music play failed:", err);
+            });
         };
-        document.addEventListener('click', startOnInteraction);
-        document.addEventListener('touchstart', startOnInteraction);
+        document.body.addEventListener('click', startAudio);
+        document.body.addEventListener('touchstart', startAudio);
     }
 }
 
