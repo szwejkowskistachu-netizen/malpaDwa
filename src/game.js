@@ -305,7 +305,7 @@ export class GameScene extends Phaser.Scene {
             enemy.setCollideWorldBounds(true);
             enemy.setGravityY(0); 
             this.physics.add.overlap(this.player, enemy, this.touchEnemy, null, this);
-            const speed = 80 + (this.level * 10);
+            const speed = (this.level === 3) ? 180 : (80 + (this.level * 10));
             enemy.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
             enemy.setBounce(1);
             
