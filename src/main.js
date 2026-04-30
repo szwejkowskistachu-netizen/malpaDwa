@@ -92,14 +92,26 @@ function renderShop() {
         const isEquipped = gameState.currentSkin === skin.id;
         const skinEl = document.createElement('div');
         skinEl.className = 'skin-item';
+        
         skinEl.innerHTML = `
-            <span>${skin.name}</span>
-            ${isEquipped ? '<span>(Wybrana)</span>' : 
-              isOwned ? `<button onclick="equipSkin('${skin.id}')">WYBIERZ</button>` : 
-              gameState.bananas >= skin.price ? `<button onclick="buySkin('${skin.id}')">KUP (${skin.price})</button>` : 
-              `<span>Koszt: ${skin.price}</span>`}
+            <div class="skin-info">
+                <canvas id="preview-${skin.id}" class="skin-preview-canvas" width="32" height="48"></canvas>
+                <div class="skin-name-container">
+                    <span class="skin-name">${skin.name}</span>
+                    <span style="font-size: 10px; color: #bdc3c7;">${skin.price > 0 ? `Cena: ${skin.price} 🍌` : 'Darmowa'}</span>
+                </div>
+            </div>
+            <div class="skin-actions">
+                ${isEquipped ? '<span style="color: #2ecc71; font-weight: bold;">WYBRANA</span>' : 
+                  isOwned ? `<button style="width: 100px; padding: 8px;" onclick="equipSkin('${skin.id}')">WYBIERZ</button>` : 
+                  gameState.bananas >= skin.price ? `<button style="width: 100px; padding: 8px;" onclick="buySkin('${skin.id}')">KUP</button>` : 
+                  `<span style="color: #e74c3c;">BRAK ŚRODKÓW</span>`}
+            </div>
         `;
         skinsList.appendChild(skinEl);
+        
+        // Draw the preview
+        setTimeout(() => drawMonkeyPreview(`preview-${skin.id}`, skin.id), 0);
     });
 
     const itemsList = document.getElementById('items-list');
@@ -117,6 +129,77 @@ function renderShop() {
         itemsList.appendChild(itemEl);
     });
 }
+
+function drawMonkeyPreview(canvasId, skinId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const hexToColor = (hex) => {
+        const r = (hex >> 16) & 0xFF;
+        const g = (hex >> 8) & 0xFF;
+        const b = hex & 0xFF;
+        return `rgb(${r},${g},${b})`;
+    };
+
+    // Body Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath(); ctx.ellipse(18, 37, 12, 16, 0, 0, 2 * Math.PI); ctx.fill();
+
+    // Body
+    ctx.fillStyle = skinId === 'nauk' ? '#FFFFFF' : '#8B4513';
+    ctx.beginPath(); ctx.ellipse(16, 35, 12, 16, 0, 0, 2 * Math.PI); ctx.fill();
+
+    if (skinId === 'hiper_malpa') {
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(16, 24, 22, 0, 2 * Math.PI); ctx.stroke();
+    }
+
+    // Belly
+    ctx.fillStyle = '#D2B48C';
+    ctx.beginPath(); ctx.ellipse(16, 38, 7, 10, 0, 0, 2 * Math.PI); ctx.fill();
+
+    // Head
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath(); ctx.arc(16, 18, 12, 0, 2 * Math.PI); ctx.fill();
+
+    // Face
+    ctx.fillStyle = '#D2B48C';
+    ctx.beginPath(); ctx.ellipse(16, 20, 10, 8, 0, 0, 2 * Math.PI); ctx.fill();
+
+    // Ears
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath(); ctx.arc(6, 18, 4, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(26, 18, 4, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = '#D2B48C';
+    ctx.beginPath(); ctx.arc(6, 18, 2, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(26, 18, 2, 0, 2 * Math.PI); ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(13, 17, 2.5, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(19, 17, 2.5, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = skinId === 'hiper_malpa' ? '#00ffff' : '#000000';
+    ctx.beginPath(); ctx.arc(13, 17, 1.2, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(19, 17, 1.2, 0, 2 * Math.PI); ctx.fill();
+
+    if (skinId === 'desek') {
+        ctx.fillStyle = '#228B22';
+        ctx.fillRect(6, 6, 20, 6);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(8, 15, 16, 4);
+    } else if (skinId === 'ballerina') {
+        ctx.fillStyle = '#FF69B4';
+        ctx.beginPath(); ctx.ellipse(16, 42, 16, 5, 0, 0, 2 * Math.PI); ctx.fill();
+    } else if (skinId === 'nauk') {
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(13, 17, 4, 0, 2 * Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.arc(19, 17, 4, 0, 2 * Math.PI); ctx.stroke();
+    }
+}
+
 
 function renderRanking() {
     const scoresList = document.getElementById('scores-list');

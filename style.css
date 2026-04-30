@@ -156,12 +156,40 @@ canvas {
     border: 2px solid #f1c40f;
     background: #34495e;
     width: 95%;
-    max-width: 400px;
+    max-width: 450px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.skin-preview-canvas {
+    width: 48px;
+    height: 72px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.skin-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.skin-name-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.skin-name {
+    font-weight: bold;
+    color: #f1c40f;
+    font-size: 16px;
+    text-transform: uppercase;
 }
 
 #username-input {
