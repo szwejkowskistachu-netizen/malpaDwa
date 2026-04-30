@@ -34,21 +34,18 @@ let isMusicMuted = false;
 
 function initMusic() {
     music = document.getElementById('menu-music');
-    if (music) {
+    const overlay = document.getElementById('audio-start-overlay');
+    
+    if (music && overlay) {
         music.volume = 0.5;
-        // Super aggressive music start
-        const startAudio = () => {
-            if (music.paused) {
-                music.play().then(() => {
-                    console.log("Music started!");
-                }).catch(err => {
-                    console.log("Music play failed:", err);
-                });
-            }
-        };
-        window.addEventListener('mousedown', startAudio, { once: true });
-        window.addEventListener('touchstart', startAudio, { once: true });
-        window.addEventListener('keydown', startAudio, { once: true });
+        overlay.addEventListener('click', () => {
+            music.play().then(() => {
+                overlay.style.display = 'none';
+            }).catch(err => {
+                console.log("Music play failed:", err);
+                overlay.style.display = 'none';
+            });
+        });
     }
 }
 
