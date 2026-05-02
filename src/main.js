@@ -33,34 +33,39 @@ let music;
 let isMusicMuted = false;
 
 function initMusic() {
-    music = document.getElementById('menu-music');
+    music = document.getElementById('game-music');
     const overlay = document.getElementById('audio-start-overlay');
     
     if (overlay) {
-        overlay.onclick = () => {
+        const handleStart = () => {
             if (music) {
-                music.play().catch(err => console.log("Music play failed:", err));
+                music.play().catch(err => console.log("Music play failed", err));
             }
             overlay.remove();
         };
+        overlay.onclick = handleStart;
+        overlay.ontouchstart = handleStart;
     }
 }
 
 function toggleMusic() {
-    if (!music) music = document.getElementById('menu-music');
-    isMusicMuted = !isMusicMuted;
-    if (isMusicMuted) {
-        music.pause();
-        document.getElementById('music-toggle-btn').innerText = '🔇';
-    } else {
-        music.play().catch(() => {});
+    music = document.getElementById('game-music');
+    if (!music) return;
+    
+    if (music.paused) {
+        music.play();
+        isMusicMuted = false;
         document.getElementById('music-toggle-btn').innerText = '🔊';
+    } else {
+        music.pause();
+        isMusicMuted = true;
+        document.getElementById('music-toggle-btn').innerText = '🔇';
     }
 }
 
 function startMusic() {
-    if (!music) music = document.getElementById('menu-music');
-    if (music && !isMusicMuted && music.paused) {
+    music = document.getElementById('game-music');
+    if (music && music.paused && !isMusicMuted) {
         music.play().catch(() => {});
     }
 }
