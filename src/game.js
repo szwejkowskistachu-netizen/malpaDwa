@@ -113,6 +113,7 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 2) suffix = '_jungle';
         else if (this.level === 3) suffix = '_lava';
         else if (this.level === 4) suffix = '_city';
+        else if (this.level === 5) suffix = '_water';
         
         let platformColor = 0xA0522D;
         let groundColor = 0x5D4037;
@@ -125,6 +126,9 @@ export class GameScene extends Phaser.Scene {
         } else if (this.level === 4) {
             platformColor = 0x555555;
             groundColor = 0x222222;
+        } else if (this.level === 5) {
+            platformColor = 0xFF7F50; // Coral
+            groundColor = 0xEDC9AF; // Sand
         }
 
         graphics.clear();
@@ -133,8 +137,13 @@ export class GameScene extends Phaser.Scene {
         
         // Better texture for platforms
         graphics.fillStyle(0x000000, 0.15);
-        for(let i=0; i<10; i++) {
-            graphics.fillRect(Math.random()*180, Math.random()*28, 20, 2);
+        if (this.level === 5) {
+            // Coral patterns
+            for(let i=0; i<15; i++) graphics.fillCircle(Math.random()*200, Math.random()*32, 4);
+        } else {
+            for(let i=0; i<10; i++) {
+                graphics.fillRect(Math.random()*180, Math.random()*28, 20, 2);
+            }
         }
         graphics.lineStyle(2, 0xffffff, 0.1);
         graphics.strokeRect(0, 0, 200, 32);
@@ -158,6 +167,9 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 4) {
             graphics.fillStyle(0xffffff, 0.5);
             for(let i=0; i<10; i++) graphics.fillRect(10 + (i*80), 14, 40, 4);
+        } else if (this.level === 5) {
+            graphics.fillStyle(0xFFD700, 0.3); // Shiny sand
+            for(let i=0; i<30; i++) graphics.fillCircle(Math.random()*800, Math.random()*32, 3);
         } else if (this.level !== 3) {
             graphics.fillStyle(0x228B22, 1);
             graphics.fillRect(0, 0, 800, 8);
@@ -202,6 +214,16 @@ export class GameScene extends Phaser.Scene {
             graphics.fillStyle(0xff0000, 0.5);
             for(let i=0; i<10; i++) graphics.fillCircle(Math.random()*50, Math.random()*50, 3); // Lava spots
             graphics.generateTexture('enemy', 50, 50);
+        } else if (this.level === 5) {
+            // Shark
+            graphics.fillStyle(0x808080, 1); // Gray
+            graphics.fillEllipse(22, 10, 40, 15); // Body
+            graphics.fillTriangle(20, 5, 30, 5, 25, -5); // Fin
+            graphics.fillStyle(0xffffff, 1);
+            graphics.fillCircle(38, 8, 2); // Eye
+            graphics.fillStyle(0x000000, 1);
+            graphics.fillCircle(38, 8, 1);
+            graphics.generateTexture('enemy', 44, 20);
         } else {
             // Realistic Snake
             graphics.fillStyle(0x4CAF50, 1);
@@ -257,6 +279,7 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 2) this.cameras.main.setBackgroundColor('#1a2f1a');
         else if (this.level === 3) this.cameras.main.setBackgroundColor('#2f1a1a');
         else if (this.level === 4) this.cameras.main.setBackgroundColor('#001122');
+        else if (this.level === 5) this.cameras.main.setBackgroundColor('#004466');
         else this.cameras.main.setBackgroundColor('#0d1b2a');
 
         this.generateMap();
@@ -264,6 +287,15 @@ export class GameScene extends Phaser.Scene {
         this.normalScale = 0.8;
         this.crouchScale = 0.4;
         this.player = this.physics.add.sprite(100, 400, 'player_' + this.currentSkin).setScale(this.normalScale);
+        
+        // Underwater Physics
+        if (this.level === 5) {
+            this.player.setGravityY(100);
+            this.player.setDragX(50);
+        } else {
+            this.player.setGravityY(200);
+        }
+        
         this.player.setBounce(0.1);
         this.player.setCollideWorldBounds(true);
         this.player.body.setSize(30, 45);
@@ -271,7 +303,12 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 3) {
             this.physics.add.overlap(this.player, this.ground, this.touchLava, null, this);
         }
-        this.player.setGravityY(200);
+        
+        // Oxygen Logic
+        if (this.level === 5) {
+            this.oxygen = 20;
+            this.oxygenText = this.add.text(400, 50, 'TLEN: 20s', { fontSize: '28px', fill: '#00ffff', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 0);
+        }
 
         // Hiper Malpa Logic
         this.hasPowerStrike = (this.currentSkin === 'hiper_malpa');
@@ -501,8 +538,24 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    update() {
+    update(time, delta) {
         if (this.isGameOver) return;
+        
+        // Oxygen System for Level 5
+        if (this.level === 5) {
+            this.oxygen -= delta / 1000;
+            if (this.player.y < 120) {
+                this.oxygen = 20; // Refill oxygen near surface
+                this.oxygenText.setFill('#00ff00');
+            } else if (this.oxygen < 5) {
+                this.oxygenText.setFill('#ff0000');
+            } else {
+                this.oxygenText.setFill('#00ffff');
+            }
+            this.oxygenText.setText('TLEN: ' + Math.ceil(this.oxygen) + 's');
+            if (this.oxygen <= 0) this.gameOver(false);
+        }
+
         if (this.emoteText.visible) this.emoteText.setPosition(this.player.x, this.player.y - 60);
 
         if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerStrike();
@@ -607,9 +660,9 @@ export class GameScene extends Phaser.Scene {
         const center = this.cameras.main.centerX;
         const middle = this.cameras.main.centerY;
         if (isWin) {
-            if (this.level === 4) {
-                this.add.text(center, middle - 100, 'UKOŃCZYŁEŚ GRĘ', { fontSize: '64px', fill: '#0f0', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5);
-                this.add.text(center, middle - 30, 'GRATULACJE!', { fontSize: '48px', fill: '#f1c40f', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+            if (this.level === 5) {
+                this.add.text(center, middle - 100, 'UKOŃCZYŁEŚ GRĘ!', { fontSize: '64px', fill: '#0f0', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5);
+                this.add.text(center, middle - 30, 'GRATULACJE MAŁPIO MISTRZU!', { fontSize: '32px', fill: '#f1c40f', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
                 const finishBtn = this.add.text(center, middle + 80, 'KONIEC', { fontSize: '32px', fill: '#fff', backgroundColor: '#e74c3c', padding: { x: 20, y: 10 } }).setOrigin(0.5).setInteractive();
                 finishBtn.on('pointerdown', () => window.endGame(this.collectedBananas, 'exit'));
             } else {
@@ -620,7 +673,8 @@ export class GameScene extends Phaser.Scene {
                 exitBtn.on('pointerdown', () => window.endGame(this.collectedBananas, 'exit'));
             }
         } else {
-            this.add.text(center, middle, 'PRZEGRAŁEŚ', { fontSize: '64px', fill: '#f00', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5);
+            const reason = (this.oxygen <= 0) ? 'BRAK TLENU!' : 'PRZEGRAŁEŚ';
+            this.add.text(center, middle, reason, { fontSize: '64px', fill: '#f00', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5);
             setTimeout(() => window.endGame(this.collectedBananas, 'exit'), 2000);
         }
     }
