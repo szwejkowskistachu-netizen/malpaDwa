@@ -114,6 +114,7 @@ export class GameScene extends Phaser.Scene {
         else if (this.level === 3) suffix = '_lava';
         else if (this.level === 4) suffix = '_city';
         else if (this.level === 5) suffix = '_water';
+        else if (this.level === 5) suffix = '_water';
         
         let platformColor = 0xA0522D;
         let groundColor = 0x5D4037;
@@ -519,6 +520,7 @@ export class GameScene extends Phaser.Scene {
         if (this.level === 2) suffix = '_jungle';
         else if (this.level === 3) suffix = '_lava';
         else if (this.level === 4) suffix = '_city';
+        else if (this.level === 5) suffix = '_water';
         if (this.level === 3) {
             this.ground = this.physics.add.staticImage(400, 568, 'ground' + suffix).setScale(2).refreshBody();
             this.platformArray.push(this.platforms.create(100, 450, 'platform' + suffix).refreshBody());
