@@ -29,51 +29,6 @@ gameState = { ...defaultState, ...gameState };
 let currentRunScore = 0;
 const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
 
-let music;
-let isMusicMuted = false;
-
-function initMusic() {
-    music = document.getElementById('game-music');
-    const overlay = document.getElementById('audio-start-overlay');
-    
-    if (overlay) {
-        const handleStart = () => {
-            if (music) {
-                music.play().catch(err => console.log("Music play failed", err));
-            }
-            overlay.remove();
-        };
-        overlay.onclick = handleStart;
-        overlay.ontouchstart = handleStart;
-    }
-}
-
-function toggleMusic() {
-    music = document.getElementById('game-music');
-    if (!music) return;
-    
-    if (music.paused) {
-        music.play();
-        isMusicMuted = false;
-        document.getElementById('music-toggle-btn').innerText = '🔊';
-    } else {
-        music.pause();
-        isMusicMuted = true;
-        document.getElementById('music-toggle-btn').innerText = '🔇';
-    }
-}
-
-function startMusic() {
-    music = document.getElementById('game-music');
-    if (music && music.paused && !isMusicMuted) {
-        music.play().catch(() => {});
-    }
-}
-
-function stopMusic() {
-    // We decided to keep it playing everywhere, but keeping the function for future use
-}
-
 function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
     if (gameState.currentUsername) {
@@ -363,32 +318,22 @@ function showScreen(screenId) {
 
 // Event listeners
 document.getElementById('play-btn').addEventListener('click', () => {
-    startMusic();
     gameState.currentLevel = 1;
     saveState();
     showScreen('game');
 });
 document.getElementById('shop-btn').addEventListener('click', () => {
-    startMusic();
     showScreen('shop');
 });
 document.getElementById('ranking-btn').addEventListener('click', () => {
-    startMusic();
     showScreen('ranking');
 });
 document.getElementById('submit-score-btn').addEventListener('click', submitScore);
-document.getElementById('music-toggle-btn').addEventListener('click', () => {
-    startMusic(); // Try to play if not playing
-    toggleMusic();
-});
 
 document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        startMusic();
         showScreen('start');
     });
 });
 
-initMusic();
 updateStartScreen();
-startMusic();

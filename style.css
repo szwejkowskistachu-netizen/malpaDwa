@@ -23,38 +23,6 @@ body {
     touch-action: manipulation;
 }
 
-#global-controls {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    display: flex;
-    gap: 10px;
-}
-
-#music-toggle-btn {
-    width: 50px;
-    height: 50px;
-    padding: 0;
-    font-size: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    background: linear-gradient(to bottom, #f1c40f, #f39c12);
-    border: 2px solid #d35400;
-    box-shadow: 0 4px 0 #d35400;
-}
-
-#music-toggle-btn:hover {
-    transform: scale(1.1);
-}
-
-#music-toggle-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #d35400;
-}
-
 #screens {
     width: 100%;
     height: 100%;
