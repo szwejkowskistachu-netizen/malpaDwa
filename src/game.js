@@ -558,6 +558,42 @@ export class GameScene extends Phaser.Scene {
             if (this.oxygen <= 0) this.gameOver(false);
         }
 
+        // Enemy AI System
+        this.enemies.getChildren().forEach(enemy => {
+            if (!enemy.active) return;
+            
+            let chaseSpeed = 0;
+            let detectionRange = 300 + (this.level * 50);
+
+            if (this.level === 3) {
+                // Gorilla is super aggressive
+                chaseSpeed = 160;
+                detectionRange = 1000; // Always chases
+            } else if (this.level === 5) {
+                // Sharks are smarter
+                chaseSpeed = 120 + (this.level * 10);
+                detectionRange = 500;
+            } else {
+                // Standard enemies get smarter each level
+                chaseSpeed = 50 + (this.level * 15);
+            }
+
+            const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+            
+            if (distance < detectionRange) {
+                // Chase logic: move towards player
+                this.physics.moveToObject(enemy, this.player, chaseSpeed);
+            } else {
+                // Maintain some random movement if too far
+                if (enemy.body.speed < 20) {
+                    enemy.setVelocity(
+                        Phaser.Math.Between(-100, 100),
+                        Phaser.Math.Between(-100, 100)
+                    );
+                }
+            }
+        });
+
         if (this.emoteText.visible) this.emoteText.setPosition(this.player.x, this.player.y - 60);
 
         if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerStrike();
