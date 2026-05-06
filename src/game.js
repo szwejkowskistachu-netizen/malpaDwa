@@ -439,6 +439,7 @@ export class GameScene extends Phaser.Scene {
         this.bat.setPosition(this.player.x, this.player.y);
         this.bat.angle = -90;
         this.bat.body.enable = true;
+        this.bat.body.setSize(80, 80); // Much larger hit area for easier combat
 
         this.tweens.add({
             targets: this.bat,
@@ -446,7 +447,7 @@ export class GameScene extends Phaser.Scene {
             duration: 250,
             onUpdate: () => {
                 this.bat.setPosition(this.player.x, this.player.y);
-                // Sync physics body position (Arcade physics)
+                // Center the large physics body on the player/bat origin
                 this.bat.body.x = this.bat.x - this.bat.body.width / 2;
                 this.bat.body.y = this.bat.y - this.bat.body.height / 2;
                 
@@ -469,7 +470,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     killEnemy(enemy) {
-        if (!enemy.active) return;
+        if (!enemy || !enemy.active) return;
+        
+        // Disable physics immediately so it doesn't hurt the player
+        enemy.disableBody(true, true);
         
         // Create death explosion particles
         const x = enemy.x;
@@ -484,21 +488,17 @@ export class GameScene extends Phaser.Scene {
             gravityY: 200,
             quantity: 20
         });
-        deathExplosion.explode();
-        this.time.delayedCall(1000, () => deathExplosion.destroy());
-
-        enemy.disableBody(true, false);
-        this.tweens.add({
-            targets: enemy,
-            alpha: 0,
-            scaleX: 2,
-            scaleY: 2,
-            angle: 180,
-            duration: 500,
-            onComplete: () => {
-                enemy.destroy();
-            }
+        
+        if (deathExplosion.explode) {
+            deathExplosion.explode();
+        }
+        
+        this.time.delayedCall(1000, () => {
+            if (deathExplosion.destroy) deathExplosion.destroy();
         });
+
+        // Ensure the enemy is definitely gone from all systems
+        enemy.destroy();
     }
 
     triggerEmote(type) {
