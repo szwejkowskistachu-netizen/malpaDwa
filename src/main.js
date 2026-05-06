@@ -26,11 +26,19 @@ const STORAGE_KEY = 'monkeyGame_v2';
 let gameState = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultState;
 gameState = { ...defaultState, ...gameState };
 
+// Explicitly restore skin from backup storage to prevent "disappearing"
+const savedSkin = localStorage.getItem('monkeyGame_currentSkin');
+if (savedSkin && gameState.ownedSkins.includes(savedSkin)) {
+    gameState.currentSkin = savedSkin;
+}
+
 let currentRunScore = 0;
 const botNames = ['MałpiKról', 'BananowyJoe', 'DżunglowyMistrz', 'SzybkiSzympans', 'Zbieracz2000'];
 
 function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(gameState));
+    // Also save specific fields to ensure they are not lost on merge
+    localStorage.setItem('monkeyGame_currentSkin', gameState.currentSkin);
     if (gameState.currentUsername) {
         localStorage.setItem('monkeyGame_user_v2', gameState.currentUsername);
     }

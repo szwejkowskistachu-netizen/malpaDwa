@@ -462,9 +462,20 @@ export class GameScene extends Phaser.Scene {
                 this.bat.setVisible(false);
                 this.bat.body.enable = false;
                 this.isStriking = false;
-                this.hasPowerStrike = false;
-                if (this.energyParticles) this.energyParticles.stop();
-                if (this.strikeText) this.strikeText.setText('PAŁKA: ZUŻYTA');
+                
+                // Hiper Małpa power reset with cooldown instead of disappearing forever
+                if (this.currentSkin === 'hiper_malpa') {
+                    if (this.strikeText) this.strikeText.setText('ŁADOWANIE...');
+                    this.time.delayedCall(5000, () => {
+                        this.hasPowerStrike = true;
+                        if (this.energyParticles) this.energyParticles.start();
+                        if (this.strikeText) this.strikeText.setText('PAŁKA: GOTOWA (E)');
+                    });
+                } else {
+                    this.hasPowerStrike = false;
+                    if (this.energyParticles) this.energyParticles.stop();
+                    if (this.strikeText) this.strikeText.setText('PAŁKA: ZUŻYTA');
+                }
             }
         });
     }
