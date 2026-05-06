@@ -343,7 +343,7 @@ export class GameScene extends Phaser.Scene {
             enemy.setCollideWorldBounds(true);
             enemy.setGravityY(0); 
             this.physics.add.overlap(this.player, enemy, this.touchEnemy, null, this);
-            const speed = (this.level === 3) ? 180 : (80 + (this.level * 10));
+            const speed = (this.level === 3) ? 120 : (80 + (this.level * 10));
             enemy.setVelocity(Phaser.Math.Between(-speed, speed), Phaser.Math.Between(-speed, speed));
             enemy.setBounce(1);
             
@@ -566,9 +566,9 @@ export class GameScene extends Phaser.Scene {
             let detectionRange = 300 + (this.level * 50);
 
             if (this.level === 3) {
-                // Gorilla is super aggressive
-                chaseSpeed = 160;
-                detectionRange = 1000; // Always chases
+                // Gorilla is dumber: slower, smaller range, and loses focus
+                chaseSpeed = 85;
+                detectionRange = 350;
             } else if (this.level === 5) {
                 // Sharks are smarter
                 chaseSpeed = 120 + (this.level * 10);
@@ -581,6 +581,11 @@ export class GameScene extends Phaser.Scene {
             const distance = Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y);
             
             if (distance < detectionRange) {
+                // Level 3 Boss "loses focus" occasionally to be dumber
+                if (this.level === 3 && Math.sin(time / 1000) > 0.3) {
+                     // Pause chasing for a moment
+                     return;
+                }
                 // Chase logic: move towards player
                 this.physics.moveToObject(enemy, this.player, chaseSpeed);
             } else {
